@@ -324,6 +324,7 @@ Se usa `react-router` (el mismo que `gym-fe`) y el token se guarda en
 | `routes/PrivateRoute.jsx` | Sin token redirige a `/login`; con token muestra la pagina |
 | `routes/PublicRoute.jsx` | Con token redirige a `/`; sin token muestra la pagina (login, registro) |
 | `utils/token.js` | `setToken(token)`, `getToken()` y `removeToken()` |
+| `services/service.js` | `HEADERS` envia el token guardado (`Authorization: Bearer <token>`) en cada pedido. Los services no tienen que agregarlo |
 
 Se usan envolviendo la pagina de cada ruta. Este es el mismo ejemplo que esta en
 el comentario de `src/App.jsx`:
