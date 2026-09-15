@@ -1,12 +1,6 @@
-import config from '../config/config'
+import { HEADERS, URL_USER, handleResponse } from './service'
 
 export const getMe = async () => {
-  const response = await fetch(`${config.API_URL}/api/user/me`)
-  const body = await response.json()
-
-  if (!response.ok) {
-    throw new Error(body.message || body.error)
-  }
-
-  return body.data
+  const response = await fetch(`${URL_USER}/me`, { headers: HEADERS })
+  return handleResponse(response)
 }
