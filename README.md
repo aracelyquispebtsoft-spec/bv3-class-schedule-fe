@@ -11,6 +11,7 @@ src/
 ├── App.jsx                         # Layout raiz (y ejemplo de rutas en el comentario)
 ├── index.css                       # Tailwind y estilos base
 ├── config/config.js                # Lectura de .env
+├── data/dummy.data.js              # Datos de ejemplo para trabajar sin backend
 ├── services/
 │   ├── service.js                  # URLs de cada recurso, HEADERS y handleResponse()
 │   └── user.service.js             # Llamadas al API: getMe()
@@ -366,6 +367,106 @@ Reglas:
 - A diferencia de `gym-fe`, no hay roles (`allowedRoles`): los usuarios del
   backend todavia no tienen rol.
 
+## Trabajar sin backend: datos de ejemplo
+
+Si tu pagina necesita un endpoint que el backend todavia no tiene, no te quedes esperando: armala con los datos de `src/data/dummy.data.js`. Son los datos del Colegio San Martín (los mismos de los seeders del backend) y tienen **la misma forma que devuelve el API**: los campos se llaman igual que las columnas de las migraciones (`max_weekly_hours`, `student_count`, `required_room_type`...). Por
+eso, cuando el backend esta listo, solo cambia de donde salen los datos: la tabla, el formulario y los componentes quedan igual.
+
+| Variable | Imita a |
+|---|---|
+| `userData` | `GET /api/user/me` |
+| `teachersData` | `GET /api/teachers` |
+| `classroomsData` | `GET /api/classrooms` |
+| `coursesData` | `GET /api/courses` |
+| `subjectsData` | `GET /api/subjects` |
+| `timeSlotsData` | `GET /api/time-slots` |
+| `classSessionsData` | `GET /api/class-sessions` |
+
+### Paso 1: la page usa la variable
+
+Se importa la lista y se usa como valor inicial del estado:
+
+```jsx
+import { TableCell, TableRow } from '@mui/material'
+import { useState } from 'react'
+import TableActions from '../components/shared/TableActions'
+import TableData from '../components/shared/TableData'
+import { teachersData } from '../data/dummy.data'
+
+function TeacherPage() {
+  const [teachers, setTeachers] = useState(teachersData)
+
+  return (
+    <TableData title="Docentes" columns={['Nombre', 'Tope semanal', 'Acciones']}>
+      {teachers.map((teacher) => (
+        <TableRow key={teacher.id} hover>
+          <TableCell>{teacher.name}</TableCell>
+          <TableCell>{teacher.max_weekly_hours} h</TableCell>
+          <TableCell>
+            <TableActions onEdit={() => openEdit(teacher)} onDelete={() => openDelete(teacher)} />
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableData>
+  )
+}
+```
+
+- Mientras no hay backend, agregar, editar o eliminar cambia solo el estado con
+  `setTeachers`. Por ejemplo, para agregar:
+  `setTeachers([...teachers, { id: String(Date.now()), ...form }])`. Sirve para
+  probar el modal y el formulario, pero se pierde al recargar la pagina.
+- Las clases traen sus datos anidados: `session.subject.name`,
+  `session.time_slot.start_time`. Para imitar los filtros del backend
+  (`?course_id=`), filtra la lista:
+  `classSessionsData.filter((session) => session.course.id === courseId)`.
+
+### Paso 2: cuando el backend esta listo, la page usa el service
+
+Crea el service (ver [Agregar una entidad nueva](#agregar-una-entidad-nueva)) y
+cambia en la page **solo** la carga de datos. Las lineas con `-` se borran y las
+con `+` se agregan; las filas de la tabla no se tocan:
+
+```diff
+-import { useState } from 'react'
+-import { teachersData } from '../data/dummy.data'
++import { useEffect, useState } from 'react'
++import * as teacherService from '../services/teacher.service'
+
+ function TeacherPage() {
+-  const [teachers, setTeachers] = useState(teachersData)
++  const [teachers, setTeachers] = useState([])
++  const [loading, setLoading] = useState(true)
++  const [error, setError] = useState(null)
++
++  useEffect(() => {
++    teacherService
++      .getAll()
++      .then(setTeachers)
++      .catch((err) => setError(err.message))
++      .finally(() => setLoading(false))
++  }, [])
++
++  if (error) return <p className="text-red-700">Error: {error}</p>
+
+   return (
+-    <TableData title="Docentes" columns={['Nombre', 'Tope semanal', 'Acciones']}>
++    <TableData title="Docentes" columns={['Nombre', 'Tope semanal', 'Acciones']} loading={loading}>
+```
+
+Agregar, editar y eliminar dejan de tocar solo el estado: llaman a
+`teacherService.create`, `update` y `remove`, y despues vuelven a pedir la lista.
+
+Reglas:
+
+- `dummy.data.js` se importa **solo desde una page**: nunca desde un service ni
+  desde `components/` (los componentes reciben todo por props).
+- Los ids son de mentira. No los escribas en la logica de la page (nada de
+  `if (teacher.id === '01JZ...')`).
+- Cuando tu page ya usa el service, borra el import de `dummy.data`.
+- Si el backend agrega o cambia un campo, actualizalo tambien en
+  `dummy.data.js`, para que el resto del equipo siga probando con la forma real.
+
 ## Agregar una entidad nueva
 
 Las proximas entidades salen de las tablas del backend: `teachers`,
@@ -378,6 +479,10 @@ que el backend tenga sus rutas:
    `ModalStandard` y `FormStandard`.
 4. Cuando las rutas esten conectadas: agrega su `<Route>` envuelta en
    `<PrivateRoute>` (ver [Rutas publicas y privadas](#rutas-publicas-y-privadas)).
+
+> Si el backend todavia no tiene la ruta, empieza por el paso 3 con los datos de
+> ejemplo y haz los pasos 1 y 2 cuando exista (ver
+> [Trabajar sin backend](#trabajar-sin-backend-datos-de-ejemplo)).
 
 Ejemplo, si el backend expone `/api/teachers`:
 
