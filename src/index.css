@@ -1,20 +1,7 @@
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-}
+@import "tailwindcss";
 
-.container {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 32px 16px;
-}
-
-.card {
-  padding: 16px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-}
-
-.error {
-  color: #c62828;
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-700;
+  }
 }
