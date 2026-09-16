@@ -2,6 +2,7 @@ import config from '../config/config'
 import { getToken } from '../utils/token'
 
 export const API_URL = `${config.API_URL}/api`
+export const URL_CLASSROOMS = `${API_URL}/classrooms`
 
 /** One URL per resource. Must match the routes in the backend's index.routes.js. */
 export const URL_USER = `${API_URL}/user`
