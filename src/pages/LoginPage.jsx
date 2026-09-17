@@ -10,8 +10,10 @@ import { setToken } from '../utils/token'
 function LoginPage() {
   const navigate = useNavigate()
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+  })
 
   const [errors, setErrors] = useState({})
   const [error, setError] = useState(null)
@@ -20,17 +22,33 @@ function LoginPage() {
   const validate = () => {
     const newErrors = {}
 
-    if (!email.trim()) {
+    if (!form.email.trim()) {
       newErrors.email = 'El correo es obligatorio'
     }
 
-    if (!password) {
+    if (!form.password) {
       newErrors.password = 'La contraseña es obligatoria'
     }
 
     setErrors(newErrors)
 
     return Object.keys(newErrors).length === 0
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    setForm(prev => ({
+      ...prev,
+      [name]: value,
+    }))
+
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: null,
+      }))
+    }
   }
 
   const handleSubmit = async () => {
@@ -41,7 +59,10 @@ function LoginPage() {
     setLoading(true)
 
     try {
-      const data = await authService.login(email.trim(), password)
+      const data = await authService.login(
+        form.email.trim(),
+        form.password,
+      )
 
       setToken(data.token)
       navigate('/', { replace: true })
@@ -49,28 +70,6 @@ function LoginPage() {
       setError(err.message)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value)
-
-    if (errors.email) {
-      setErrors((current) => ({
-        ...current,
-        email: null,
-      }))
-    }
-  }
-
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value)
-
-    if (errors.password) {
-      setErrors((current) => ({
-        ...current,
-        password: null,
-      }))
     }
   }
 
@@ -103,8 +102,8 @@ function LoginPage() {
               name="email"
               type="email"
               required
-              value={email}
-              onChange={handleEmailChange}
+              value={form.email}
+              onChange={handleChange}
               error={errors.email}
               autoComplete="email"
             />
@@ -116,8 +115,8 @@ function LoginPage() {
               name="password"
               type="password"
               required
-              value={password}
-              onChange={handlePasswordChange}
+              value={form.password}
+              onChange={handleChange}
               error={errors.password}
               autoComplete="current-password"
             />
