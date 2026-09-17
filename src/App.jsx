@@ -1,30 +1,65 @@
-import HomePage from './pages/HomePage'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 
-/**
- * Single page for now. Once the backend has POST /api/auth/login (and there is
- * a LoginPage), replace this with the routes, using the guards in src/routes:
- *
- *   <BrowserRouter>
- *     <Routes>
- *       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
- *       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
- *
- *       <Route path="/" element={<PrivateRoute><HomePage /></PrivateRoute>} />
- *       <Route path="/teachers" element={<PrivateRoute><TeacherPage /></PrivateRoute>} />
- *
- *       <Route path="*" element={<Navigate to="/" replace />} />
- *     </Routes>
- *   </BrowserRouter>
- *
- * - PublicRoute: only without a session (login, register). With one, goes to "/".
- * - PrivateRoute: requires a token. Without one, goes to "/login".
- */
+import Layout from './components/Layout'
+
+import PrivateRoute from './routes/PrivateRoute'
+import PublicRoute from './routes/PublicRoute'
+
+import HomePage from './pages/HomePage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import ProfilePage from './pages/ProfilePage'
+import CreateSchoolPage from './pages/CreateSchoolPage'
+import TeacherPage from './pages/TeacherPage'
+import ClassroomPage from './pages/ClassroomPage'
+import CoursePage from './pages/CoursePage'
+import SubjectPage from './pages/SubjectPage'
+import SchedulePage from './pages/SchedulePage'
+import ProgressPage from './pages/ProgressPage'
+
 function App() {
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="mb-6 text-3xl font-bold text-slate-900">Horario de clases</h1>
-      <HomePage />
-    </main>
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <RegisterPage />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          element={
+            <PrivateRoute>
+              <Layout />
+            </PrivateRoute>
+          }
+        >
+          <Route path="/" element={<HomePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/school/new" element={<CreateSchoolPage />} />
+          <Route path="/teachers" element={<TeacherPage />} />
+          <Route path="/classrooms" element={<ClassroomPage />} />
+          <Route path="/courses" element={<CoursePage />} />
+          <Route path="/subjects" element={<SubjectPage />} />
+          <Route path="/schedule" element={<SchedulePage />} />
+          <Route path="/progress" element={<ProgressPage />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
