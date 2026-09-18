@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router'
 
 import FormInput from '../components/shared/FormInput'
 import FormStandard from '../components/shared/FormStandard'
-import * as schoolService from '../services/school.service'
+import { create } from '../services/school.service'
 
 function CreateSchoolPage() {
   const navigate = useNavigate()
@@ -12,7 +12,9 @@ function CreateSchoolPage() {
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
+    const trimmedName = name.trim()
+
+    if (!trimmedName) {
       setError('El nombre del colegio es obligatorio')
       return
     }
@@ -21,7 +23,7 @@ function CreateSchoolPage() {
     setError(null)
 
     try {
-      await schoolService.create({ name: name.trim() })
+      await create({ name: trimmedName })
       navigate('/', { replace: true })
     } catch (requestError) {
       setError(requestError.message)

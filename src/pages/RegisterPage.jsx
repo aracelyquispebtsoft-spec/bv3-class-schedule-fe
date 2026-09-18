@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 
 import FormInput from "../components/shared/FormInput";
 import FormStandard from "../components/shared/FormStandard";
-import * as authService from "../services/auth.service";
+import { register } from "../services/auth.service";
 import { setToken } from "../utils/token";
 
 const initialForm = {
@@ -52,7 +52,7 @@ function RegisterPage() {
     setError(null);
 
     try {
-      const { token } = await authService.register(form);
+      const { token } = await register(form);
       setToken(token);
       navigate("/school/new", { replace: true });
     } catch (requestError) {
