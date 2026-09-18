@@ -6,6 +6,7 @@ export const API_URL = `${config.API_URL}/api`
 /** One URL per resource. Must match the routes in the backend's index.routes.js. */
 export const URL_USER = `${API_URL}/user`
 export const URL_AUTH_LOGIN = `${API_URL}/auth/login`
+export const URL_SCHOOL = `${API_URL}/school`
 
 /** Authorization is read on every request, so it always carries the current token. */
 export const HEADERS = {
