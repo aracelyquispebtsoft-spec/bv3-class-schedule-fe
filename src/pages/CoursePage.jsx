@@ -12,6 +12,7 @@ const columns = ['Nombre', 'Estudiantes', 'Acciones']
 function CoursePage() {
   const {
     courses,
+    loading,
     formModal,
     detailModal,
     deleteModal,
@@ -48,6 +49,8 @@ function CoursePage() {
             </Button>
           </div>
         }
+        loading={loading}
+        emptyMessage="No hay registro de cursos"
       >
         {courses.map((course) => (
           <TableRow key={course.id} hover>

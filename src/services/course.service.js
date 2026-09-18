@@ -1,4 +1,3 @@
-import { Update } from "@mui/icons-material";
 import { handleResponse, API_URL, HEADERS } from "./service";
 
 const URL_COURSE = "/courses"

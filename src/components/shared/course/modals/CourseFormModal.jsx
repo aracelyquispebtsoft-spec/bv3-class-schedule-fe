@@ -3,7 +3,7 @@ import ModalStandard from '../../ModalStandard'
 import FormInput from '../../FormInput'
 import FormCourse from '../FormCourse'
 
-export default function CourseFormModal({ isOpen, isEditing, formData, onClose, onChange, onSubmit }) {
+export default function CourseFormModal({ isOpen, isEditing, formData, onClose, onChange, onSubmit, errors }) {
     return (
         <ModalStandard
         isOpen={isOpen}
@@ -48,6 +48,7 @@ export default function CourseFormModal({ isOpen, isEditing, formData, onClose, 
             value={formData.name}
             onChange={onChange}
             placeholder="2°A"
+            error={errors?.name}
             />
             <FormInput
             required
@@ -56,7 +57,8 @@ export default function CourseFormModal({ isOpen, isEditing, formData, onClose, 
             type="number"
             value={formData.student_count}
             onChange={onChange}
-            helperText="Mayor que 0"
+            error={errors?.student_count}
+            helperText={errors?.student_count || "Mayor que 0"}
             placeholder="34"
             />
         </FormCourse>
