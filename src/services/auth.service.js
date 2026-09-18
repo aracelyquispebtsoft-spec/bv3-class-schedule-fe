@@ -1,6 +1,4 @@
-import { HEADERS, URL_AUTH_LOGIN, handleResponse } from './service'
-
-const FAKE_TOKEN = 'fake-jwt-token-12345'
+import { HEADERS, URL_AUTH_LOGIN, API_URL, handleResponse } from './service'
 
 export const login = async (email, password) => {
   const response = await fetch(URL_AUTH_LOGIN, {
@@ -14,18 +12,14 @@ export const login = async (email, password) => {
 
   return handleResponse(response)
 }
+
 export const register = async (userData) => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
+  const response = await fetch(`${API_URL}/auth/register`, {
+    method: 'POST',
+    headers: HEADERS,
+    body: JSON.stringify(userData),
+  })
 
-  const user = { ...userData }
-  delete user.password
-
-  return {
-    token: FAKE_TOKEN,
-    user: {
-      ...user,
-      id: 'fake-user-id',
-      school: null,
-    },
-  }
+  return handleResponse(response)
 }
+
