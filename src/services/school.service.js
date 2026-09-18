@@ -1,8 +1,11 @@
-export const create = async (schoolData) => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
+import { handleResponse, HEADERS, URL_SCHOOL } from "./service"
 
-  return {
-    id: 'fake-school-id',
-    name: schoolData.name,
-  }
+export const create = async (schoolData) => {
+  const response = await fetch(URL_SCHOOL, {
+    method: 'POST',
+    headers: HEADERS,
+    body: JSON.stringify(schoolData),
+  })
+
+  return handleResponse(response)
 }
