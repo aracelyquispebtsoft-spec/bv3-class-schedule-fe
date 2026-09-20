@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { coursesData } from '../data/dummy.data'
 import { courseService } from '../services/course.service'
 import { validateCourseForm } from '../utils/course.validations'
 
@@ -8,6 +7,7 @@ const INITIAL_FORM_STATE = { name: '', student_count: '' }
 export function useCourses() {
     const [courses, setCourses] = useState([])
     const [loading, setLoading] = useState(true)
+    const [serverError, setServerError] = useState('')
 
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingCourse, setEditingCourse] = useState(null)
@@ -16,9 +16,13 @@ export function useCourses() {
 
     const [viewOpen, setViewOpen] = useState(false)
     const [selectedCourse, setSelectedCourse] = useState(null)
+    const [saving, setSaving] = useState(false)
+    const [successMessage, setSuccessMessage] = useState('')
 
     const [deleteOpen, setDeleteOpen] = useState(false)
     const [courseToDelete, setCourseToDelete] = useState(null)
+    const [deleteError, setDeleteError] = useState('')
+    const [deleting, setDeleting] = useState(false)
 
     useEffect(() => {
         const loadCourses = async () => { 
@@ -27,9 +31,8 @@ export function useCourses() {
                 const data = await courseService.getAll()
                 setCourses(data || [])
             } catch (error) {
-                console.warn("API no disponible, usando datos de prueba.")
-                await new Promise(r=>setTimeout(r,1000))
-                setCourses(coursesData)
+                setServerError(error?.message || 'Ocurrió un error al cargar los cursos.')
+                
             } finally {
                 setLoading(false)
             }
@@ -42,6 +45,7 @@ export function useCourses() {
         setFormData(INITIAL_FORM_STATE)
         setIsModalOpen(true)
         setErrors({})
+        setServerError('')
     }
 
     const handleOpenEdit = (course) => {
@@ -49,6 +53,7 @@ export function useCourses() {
         setFormData({ name: course.name, student_count: course.student_count })
         setIsModalOpen(true)
         setErrors({})
+        setServerError('')
     }
 
     const handleCloseModal = () => {
@@ -79,37 +84,39 @@ export function useCourses() {
             return
         } 
         try {
+            setSaving(true)
+            setServerError('')
             if (editingCourse) {
                 const updated = await courseService.update(editingCourse.id, formData)
                 setCourses((prev) =>
                     prev.map((item) => (item.id === editingCourse.id ? (updated || { ...item, ...formData } ) : item))
                 )
+                setSuccessMessage('Curso actualizado correctamente.')
             } else {
                 const created = await courseService.create(formData)
-                const newCouse = created || { id: crypto.randomUUID(), ...formData }
-                setCourses((prev) => [...prev, newCouse])
+                setCourses((prev) => [...prev, created])
+                setSuccessMessage('Curso creado correctamente.')
             }
-        } catch (error) {
-            if (editingCourse) {
-                setCourses((prev) =>
-                prev.map((item) => (item.id === editingCourse.id ? { ...item, ...formData } : item))
-                )
-            } else {
-                setCourses((prev) => [...prev, { id: crypto.randomUUID(), ...formData }])
-            }
-        } finally {
             handleCloseModal()
-        }  
+        } catch (error) {
+            setServerError(error?.message || 'Ocurrió un error al guardar el curso.')
+            return
+        } finally {
+            setSaving(false)
+        }
+        
     }
 
     const handleView = (course) => {
         setSelectedCourse(course)
         setViewOpen(true)
+
     }
 
     const handleOpenDelete = (course) => {
         setCourseToDelete(course)
         setDeleteOpen(true)
+        setDeleteError('')
     }
 
     const handleCloseDelete = () => {
@@ -118,26 +125,43 @@ export function useCourses() {
     }
 
     const handleConfirmDelete = async () => {
-        if (courseToDelete) {
-            try {
-                await courseService.destroy(courseToDelete.id)
-            } catch (error) {
-                console.warn("Error al eliminar en API, eliminando localmente.")
-            } finally {
-                setCourses((prev) => prev.filter((item) => item.id !== courseToDelete.id))
-                handleCloseDelete()
-            }     
+        if (!courseToDelete) return
+
+        try {
+            setDeleting(true)
+            setDeleteError('')
+            await courseService.destroy(courseToDelete.id)
+
+            setCourses((prev) =>
+                prev.filter((item) => item.id !== courseToDelete.id)
+            )
+            setSuccessMessage('Curso eliminado correctamente.')
+            handleCloseDelete()
+        } catch (error) {
+            setDeleteError(
+                error?.message || 'No se pudo eliminar el curso.'
+            )
+        } finally {
+            setDeleting(false)
         }
+    }
+
+    const closeSuccess = () => {
+        setSuccessMessage('')
     }
 
     return {
         courses,
         loading,
+        successMessage,
+        closeSuccess,
         formModal: {
             isOpen: isModalOpen,
             isEditing: Boolean(editingCourse),
             formData,
             errors,
+            serverError,
+            saving,
             onClose: handleCloseModal,
             onChange: handleChange,
             onSubmit: handleSubmit,
@@ -150,6 +174,8 @@ export function useCourses() {
         deleteModal: {
             isOpen: deleteOpen,
             course: courseToDelete,
+            error: deleteError,
+            loading: deleting,
             onClose: handleCloseDelete,
             onConfirm: handleConfirmDelete,
         },

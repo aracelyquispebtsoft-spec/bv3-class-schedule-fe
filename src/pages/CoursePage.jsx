@@ -1,4 +1,4 @@
-import { TableCell, TableRow, Button } from '@mui/material'
+import { TableCell, TableRow, Button, Snackbar, Alert } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import TableActions from '../components/shared/TableActions'
 import TableData from '../components/shared/TableData'
@@ -20,6 +20,8 @@ function CoursePage() {
     handleOpenEdit,
     handleView,
     handleOpenDelete,
+    successMessage,
+    closeSuccess,
   } = useCourses()
 
   return (
@@ -70,6 +72,16 @@ function CoursePage() {
       <CourseFormModal {...formModal} />
       <CourseDetailModal {...detailModal} />
       <CourseDeleteModal {...deleteModal} />
+      <Snackbar
+        open={Boolean(successMessage)}
+        autoHideDuration={3000}
+        onClose={closeSuccess}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right'}}
+      >
+        <Alert severity="success">
+          {successMessage}
+        </Alert>
+      </Snackbar>
     </>
   )
 }

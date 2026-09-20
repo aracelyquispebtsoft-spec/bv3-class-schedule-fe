@@ -1,7 +1,7 @@
-import { Button } from '@mui/material'
+import { Alert, Button } from '@mui/material'
 import ModalStandard from '../../ModalStandard'
 
-export default function CourseDeleteModal({ isOpen, course, onClose, onConfirm }) {
+export default function CourseDeleteModal({ isOpen, course, onClose, onConfirm, error, loading }) {
     return (
         <ModalStandard
         isOpen={isOpen}
@@ -13,6 +13,7 @@ export default function CourseDeleteModal({ isOpen, course, onClose, onConfirm }
                 variant="outlined"
                 color="inherit"
                 onClick={onClose}
+                disabled={loading}
                 sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 500, px: 2.5 }}
             >
                 Cancelar
@@ -21,17 +22,23 @@ export default function CourseDeleteModal({ isOpen, course, onClose, onConfirm }
                 variant="contained"
                 color="error"
                 onClick={onConfirm}
+                disabled={loading}
                 sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 500, px: 2.5 }}
             >
-                Eliminar
+                {loading ? 'Eliminando...' : 'Eliminar'}
             </Button>
             </>
         }
         >
+        {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+            </Alert>
+        )}
         {course && (
             <p className="text-slate-700 text-base">
-            ¿Seguro que quieres eliminar el curso{' '}
-            <strong className="font-bold text-slate-900">{course.name}</strong>?
+                ¿Seguro que quieres eliminar el curso{' '}
+                <strong className="font-bold text-slate-900">{course.name}</strong>?
             </p>
         )}
         </ModalStandard>
