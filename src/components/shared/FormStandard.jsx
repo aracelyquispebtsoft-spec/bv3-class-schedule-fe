@@ -16,6 +16,7 @@ function FormStandard({
   onSubmit,
   onCancel,
   submitText = 'Guardar',
+  loadingText = 'Guardando..',
   loading = false,
   warning,
   error,
@@ -47,7 +48,7 @@ function FormStandard({
           </Button>
         )}
         <Button type="submit" variant="contained" disabled={loading}>
-          {loading ? 'Guardando...' : submitText}
+          {loading ? loadingText : submitText}
         </Button>
       </div>
     </form>
