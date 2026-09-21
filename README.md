@@ -14,12 +14,13 @@ src/
 ├── data/dummy.data.js              # Datos de ejemplo para trabajar sin backend
 ├── services/
 │   ├── service.js                  # URLs de cada recurso, HEADERS y handleResponse()
-│   └── user.service.js             # Llamadas al API: getMe()
+│   └── user.service.js             # Llamadas al API: getMe(), updateMe()
 ├── utils/token.js                  # Guardar / leer / borrar el token (localStorage)
 ├── routes/
 │   ├── PrivateRoute.jsx            # Sin token → /login
 │   └── PublicRoute.jsx             # Con token → /
-├── pages/HomePage.jsx              # Pagina: pide los datos y los muestra
+├── pages/HomePage.jsx              # Pagina de inicio con saludo del usuario
+├── pages/ProfilePage.jsx           # Pagina para ver y editar perfil y colegio
 └── components/
     ├── shared/                     # Componentes base reutilizables (MUI + Tailwind)
     │   ├── TableData.jsx           # Tabla con titulo, barra, mensajes y paginacion
@@ -28,8 +29,6 @@ src/
     │   ├── FormStandard.jsx        # Formulario: grilla, alertas, Cancelar / Guardar
     │   ├── FormInput.jsx           # Campo de texto, fecha u hora
     │   └── FormSelect.jsx          # Lista desplegable
-    ├── UserCard.jsx                # Muestra el usuario
-    └── SchoolCard.jsx              # Muestra su colegio (o un aviso si no tiene)
 ```
 
 ## Flujo
@@ -140,8 +139,7 @@ GET /api/user/me
 }
 ```
 
-Si el usuario todavia no creo su colegio, `school` viene en `null` y
-`SchoolCard` muestra un aviso.
+Si el usuario todavia no creo su colegio, `school` viene en `null`.
 
 ## Componentes base
 
