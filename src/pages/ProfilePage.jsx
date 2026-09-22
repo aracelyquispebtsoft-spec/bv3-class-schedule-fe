@@ -68,7 +68,7 @@ function ProfilePage() {
     if (!userForm.email.trim()) {
       errors.email = 'El correo es obligatorio'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userForm.email)) {
-      errors.email = 'Ingresa un correo válido'
+      errors.email = 'Ingresa un correo valido'
     }
 
     setFormErrors(errors)
