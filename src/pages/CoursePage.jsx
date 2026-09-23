@@ -1,18 +1,23 @@
-import { TableCell, TableRow, Button, Snackbar, Alert } from '@mui/material'
-import AddIcon from '@mui/icons-material/Add'
-import TableActions from '../components/shared/TableActions'
-import TableData from '../components/shared/TableData'
-import CourseFormModal from '../components/shared/course/modals/CourseFormModal'
-import CourseDetailModal from '../components/shared/course/modals/CourseDetailModal'
-import CourseDeleteModal from '../components/shared/course/modals/CourseDeleteModal'
-import { useCourses } from '../hooks/useCourses'
+import { TableCell, TableRow, Button, Snackbar, Alert } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import TableActions from "../components/shared/TableActions";
+import TableData from "../components/shared/TableData";
+import CourseFormModal from "../components/shared/course/modals/CourseFormModal";
+import CourseDetailModal from "../components/shared/course/modals/CourseDetailModal";
+import CourseDeleteModal from "../components/shared/course/modals/CourseDeleteModal";
+import { useCourses } from "../hooks/useCourses";
 
-const columns = ['Nombre', 'Estudiantes', 'Acciones']
+const columns = ["Nombre", "Estudiantes", "Acciones"];
 
 function CoursePage() {
   const {
     courses,
     loading,
+    page,
+    rowsPerPage,
+    total,
+    onPageChange,
+    onRowsPerPageChange,
     formModal,
     detailModal,
     deleteModal,
@@ -22,7 +27,7 @@ function CoursePage() {
     handleOpenDelete,
     successMessage,
     closeSuccess,
-  } = useCourses()
+  } = useCourses();
 
   return (
     <>
@@ -39,10 +44,10 @@ function CoursePage() {
               variant="contained"
               onClick={handleOpenCreate}
               sx={{
-                bgcolor: 'grey.900',
-                '&:hover': { bgcolor: 'grey.800' },
-                borderRadius: '8px',
-                textTransform: 'none',
+                bgcolor: "grey.900",
+                "&:hover": { bgcolor: "grey.800" },
+                borderRadius: "8px",
+                textTransform: "none",
                 fontWeight: 500,
               }}
               startIcon={<AddIcon />}
@@ -52,6 +57,11 @@ function CoursePage() {
           </div>
         }
         loading={loading}
+        total={total}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={onPageChange}
+        onRowsPerPageChange={onRowsPerPageChange}
         emptyMessage="No hay registro de cursos"
       >
         {courses.map((course) => (
@@ -76,14 +86,12 @@ function CoursePage() {
         open={Boolean(successMessage)}
         autoHideDuration={3000}
         onClose={closeSuccess}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right'}}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <Alert severity="success">
-          {successMessage}
-        </Alert>
+        <Alert severity="success">{successMessage}</Alert>
       </Snackbar>
     </>
-  )
+  );
 }
 
-export default CoursePage
+export default CoursePage;

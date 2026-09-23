@@ -32,6 +32,9 @@ function SubjectPage() {
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [total, setTotal] = useState(0);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -46,12 +49,15 @@ function SubjectPage() {
   const [deleteError, setDeleteError] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  const loadSubjects = () => {
+  const loadSubjects = (backendPage = page, backendLimit = rowsPerPage) => {
     setLoading(true);
 
     subjectService
-      .getAll()
-      .then(setSubjects)
+      .getPage(backendPage + 1, backendLimit)
+      .then(({ data, meta }) => {
+        setSubjects(data);
+        setTotal(meta.total);
+      })
       .catch((requestError) => setError(requestError.message))
       .finally(() => setLoading(false));
   };
@@ -60,10 +66,11 @@ function SubjectPage() {
     let cancelled = false;
 
     subjectService
-      .getAll()
-      .then((data) => {
+      .getPage(page + 1, rowsPerPage)
+      .then(({ data, meta }) => {
         if (!cancelled) {
           setSubjects(data);
+          setTotal(meta.total);
         }
       })
       .catch((requestError) => {
@@ -80,7 +87,7 @@ function SubjectPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [page, rowsPerPage]);
 
   const openCreate = () => {
     setEditing(null);
@@ -211,6 +218,14 @@ function SubjectPage() {
         title="Materias"
         columns={["Nombre", "Horas por semana", "Tipo de aula", "Acciones"]}
         loading={loading}
+        total={total}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={setPage}
+        onRowsPerPageChange={(nextRowsPerPage) => {
+          setRowsPerPage(nextRowsPerPage);
+          setPage(0);
+        }}
         toolbar={
           <Button
             variant="contained"

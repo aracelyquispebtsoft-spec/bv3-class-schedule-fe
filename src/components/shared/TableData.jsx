@@ -7,8 +7,8 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-} from '@mui/material'
-import { Children, useState } from 'react'
+} from "@mui/material";
+import { Children, useState } from "react";
 
 /**
  * Standard table (MUI Table) with client-side pagination. The page renders
@@ -25,38 +25,67 @@ function TableData({
   toolbar,
   columns,
   loading = false,
-  emptyMessage = 'No hay registros',
+  emptyMessage = "No hay registros",
+  total,
+  page,
+  rowsPerPage,
+  onPageChange,
+  onRowsPerPageChange,
   children,
 }) {
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const isServerPaginated = total !== undefined;
+  const [localPage, setLocalPage] = useState(0);
+  const [localRowsPerPage, setLocalRowsPerPage] = useState(10);
 
-  const rows = Children.toArray(children)
-  const lastPage = Math.max(0, Math.ceil(rows.length / rowsPerPage) - 1)
-  const currentPage = Math.min(page, lastPage)
-  const visibleRows = rows.slice(currentPage * rowsPerPage, (currentPage + 1) * rowsPerPage)
-  const message = loading ? 'Cargando...' : emptyMessage
+  const rows = Children.toArray(children);
+  const activePage = isServerPaginated ? page : localPage;
+  const activeRowsPerPage = isServerPaginated ? rowsPerPage : localRowsPerPage;
+  const lastPage = Math.max(0, Math.ceil(rows.length / activeRowsPerPage) - 1);
+  const currentPage = isServerPaginated
+    ? activePage
+    : Math.min(activePage, lastPage);
+  const visibleRows = isServerPaginated
+    ? rows
+    : rows.slice(
+        currentPage * activeRowsPerPage,
+        (currentPage + 1) * activeRowsPerPage,
+      );
+  const message = loading ? "Cargando..." : emptyMessage;
 
   const handleRowsPerPageChange = (event) => {
-    setRowsPerPage(Number(event.target.value))
-    setPage(0)
-  }
+    const nextRowsPerPage = Number(event.target.value);
+    if (isServerPaginated) {
+      onRowsPerPageChange(nextRowsPerPage);
+      return;
+    }
+    setLocalRowsPerPage(nextRowsPerPage);
+    setLocalPage(0);
+  };
 
   return (
-    <Paper variant="outlined" sx={{ borderRadius: 3, overflow: 'hidden' }}>
+    <Paper variant="outlined" sx={{ borderRadius: 3, overflow: "hidden" }}>
       {(title || toolbar) && (
         <div className="flex flex-col gap-4 p-6">
-          {title && <h2 className="text-2xl font-bold text-slate-900">{title}</h2>}
-          {toolbar && <div className="flex flex-wrap items-center gap-3">{toolbar}</div>}
+          {title && (
+            <h2 className="text-2xl font-bold text-slate-900">{title}</h2>
+          )}
+          {toolbar && (
+            <div className="flex flex-wrap items-center gap-3">{toolbar}</div>
+          )}
         </div>
       )}
 
       <TableContainer>
-        <Table sx={{ minWidth: 760, '& .MuiTableCell-root': { whiteSpace: 'nowrap' } }}>
+        <Table
+          sx={{
+            minWidth: 760,
+            "& .MuiTableCell-root": { whiteSpace: "nowrap" },
+          }}
+        >
           <TableHead>
-            <TableRow sx={{ bgcolor: 'grey.50' }}>
+            <TableRow sx={{ bgcolor: "grey.50" }}>
               {columns.map((column) => (
-                <TableCell key={column} sx={{ fontWeight: 'bold' }}>
+                <TableCell key={column} sx={{ fontWeight: "bold" }}>
                   {column}
                 </TableCell>
               ))}
@@ -65,7 +94,11 @@ function TableData({
           <TableBody>
             {loading || rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                <TableCell
+                  colSpan={columns.length}
+                  align="center"
+                  sx={{ py: 4, color: "text.secondary" }}
+                >
                   {message}
                 </TableCell>
               </TableRow>
@@ -78,17 +111,25 @@ function TableData({
 
       <TablePagination
         component="div"
-        count={rows.length}
+        count={isServerPaginated ? total : rows.length}
         page={currentPage}
-        rowsPerPage={rowsPerPage}
+        rowsPerPage={activeRowsPerPage}
         rowsPerPageOptions={[5, 10, 25]}
-        onPageChange={(_event, newPage) => setPage(newPage)}
+        onPageChange={(_event, newPage) => {
+          if (isServerPaginated) {
+            onPageChange(newPage);
+          } else {
+            setLocalPage(newPage);
+          }
+        }}
         onRowsPerPageChange={handleRowsPerPageChange}
         labelRowsPerPage="Filas por página:"
-        labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
+        labelDisplayedRows={({ from, to, count }) =>
+          `${from}–${to} de ${count}`
+        }
       />
     </Paper>
-  )
+  );
 }
 
-export default TableData
+export default TableData;
