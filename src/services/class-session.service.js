@@ -11,7 +11,6 @@ export const classSessionsService = {
     getAll: async (filters = {}) => {
         const url = new URL(URL_CLASS_SESSION)
         url.search = new URLSearchParams(filters).toString()
-        await new Promise(r=>setTimeout(r, 1000))
         const response = await fetch(url, {
             method: "GET",
             headers: HEADERS

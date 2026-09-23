@@ -2,6 +2,7 @@ import {
   Paper,
   Button,
   Box,
+  Alert,
   Table,
   TableBody,
   TableCell,
@@ -28,6 +29,8 @@ function SchedulePage() {
     filterOptions,
     isLoading,
     isScheduleLoading,
+    error,
+    scheduleError,
     timeSlotsData,
     handleFilterTypeChange,
     handleFilterValueChange,
@@ -49,6 +52,12 @@ function SchedulePage() {
       <h3 className="text-md text-gray-500 mt-2 mb-5">
         Semana tipo del curso, docente o aula elegido
       </h3>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       <Paper
         variant="outlined"
@@ -162,6 +171,12 @@ function SchedulePage() {
           </Button>
         </Box>
 
+        {scheduleError && (
+          <Alert severity="error" sx={{ mx: 3, mb: 2 }}>
+            {scheduleError}
+          </Alert>
+        )}
+
         {isLoading ? (
           <Box
             sx={{
@@ -201,7 +216,7 @@ function SchedulePage() {
 
             <Table
               sx={{
-                minWidth: 1000,
+                minWidth: 880,
                 border: '1px solid',
                 borderColor: 'divider',
                 tableLayout: 'fixed',
@@ -211,7 +226,7 @@ function SchedulePage() {
                 <TableRow>
                   <TableCell
                     sx={{
-                      width: 130,
+                      width: 120,
                       fontWeight: 600,
                       textAlign: 'center',
                       bgcolor: 'grey.50',

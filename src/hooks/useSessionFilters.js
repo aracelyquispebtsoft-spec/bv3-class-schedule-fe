@@ -14,6 +14,8 @@ export function useSessionFilters() {
     const [filterValue, setFilterValue] = useState('')
     const [isLoading, setIsLoading] = useState(true)
     const [isScheduleLoading, setIsScheduleLoading] = useState(false)
+    const [error, setError] = useState('')
+    const [scheduleError, setScheduleError] = useState('')
 
     const loadSchedule = async (type, value) => {
         if (!value) {
@@ -23,6 +25,7 @@ export function useSessionFilters() {
 
         try {
             setIsScheduleLoading(true)
+            setScheduleError('')
             let filters = {}
             if (type === 'course') {
                 filters = {
@@ -50,6 +53,7 @@ export function useSessionFilters() {
             setClassSessions(sessions)
         } catch (error) {
             setClassSessions([])
+            setScheduleError(error.message || 'No se pudo cargar el horario. Intenta nuevamente.')
         } finally {
             setIsScheduleLoading(false)
         }
@@ -59,7 +63,7 @@ export function useSessionFilters() {
         const initialData = async () => {
             try {
                 setIsLoading(true)
-
+                setError('')
                 const [
                     coursesRes,
                     teachersRes,
@@ -101,7 +105,7 @@ export function useSessionFilters() {
                 await loadSchedule('course', firstCourseId)
 
             } catch (error) {
-
+                setError(error.message || 'No se pudo cargar la información del horario.')
             } finally {
                 setIsLoading(false)
             }
@@ -194,6 +198,8 @@ export function useSessionFilters() {
         filterOptions,
         isLoading,
         isScheduleLoading,
+        error,
+        scheduleError,
         timeSlotsData: timeSlots,
         handleFilterTypeChange,
         handleFilterValueChange,
