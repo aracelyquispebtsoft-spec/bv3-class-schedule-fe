@@ -9,6 +9,7 @@ export const URL_TEACHERS = `${API_URL}/teachers`
 export const URL_AUTH_LOGIN = `${API_URL}/auth/login`
 export const URL_SCHOOL = `${API_URL}/school`
 export const URL_SUBJECTS = `${API_URL}/subjects`
+export const URL_PROGRESS = `${API_URL}/progress`
 
 /** Authorization is read on every request, so it always carries the current token. */
 export const HEADERS = {
