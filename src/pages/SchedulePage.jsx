@@ -1,4 +1,3 @@
-import { useMemo, useState } from 'react'
 import {
   Paper,
   Button,
@@ -10,36 +9,40 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material'
+
 import AddIcon from '@mui/icons-material/Add'
 
 import FormSelect from '../components/shared/FormSelect'
+
 import {
   classSessionsData,
-  timeSlotsData,
-  teachersData,
   classroomsData,
-  coursesData,
 } from '../data/dummy.data'
 
-import { DAY_OPTIONS, filterTypes } from '../utils/constants'
-import { useSessionFilters } from '../hooks/useSessionFilters';
+import {
+  DAY_OPTIONS,
+  filterTypes,
+} from '../utils/constants'
+
+import { useSessionFilters } from '../hooks/useSessionFilters'
 
 function SchedulePage() {
   const {
     filterType,
     filterValue,
     filterOptions,
+    isLoading,
+    isScheduleLoading,
+    timeSlotsData,
     handleFilterTypeChange,
     handleFilterValueChange,
     handleCreateClass,
     getSessions,
-    getSecondSelectLabel
+    getSecondSelectLabel,
   } = useSessionFilters({
-    coursesData,
-    teachersData,
+    classSessionsData,
     classroomsData,
-    classSessionsData
-  });
+  })
 
   return (
     <>
@@ -61,7 +64,14 @@ function SchedulePage() {
         <Box
           sx={{
             display: 'flex',
-            alignItems: 'center',
+            flexDirection: {
+              xs: 'column',
+              md: 'row',
+            },
+            alignItems: {
+              xs: 'stretch',
+              md: 'center',
+            },
             justifyContent: 'space-between',
             gap: 2,
             p: 3,
@@ -70,7 +80,14 @@ function SchedulePage() {
           <Box
             sx={{
               display: 'flex',
-              alignItems: 'center',
+              flexDirection: {
+                xs: 'column',
+                sm: 'row',
+              },
+              alignItems: {
+                xs: 'stretch',
+                sm: 'center',
+              },
               gap: 1.5,
             }}
           >
@@ -83,8 +100,12 @@ function SchedulePage() {
               value={filterType}
               onChange={handleFilterTypeChange}
               options={filterTypes}
+              disabled={isLoading}
               sx={{
-                width: 180,
+                width: {
+                  xs: '100%',
+                  sm: 180,
+                },
                 '& .MuiInputBase-root': {
                   height: 44,
                 },
@@ -92,13 +113,21 @@ function SchedulePage() {
             />
 
             <FormSelect
-              label={getSecondSelectLabel()}
+              label={
+                isLoading
+                  ? 'Cargando...'
+                  : getSecondSelectLabel()
+              }
               name="filterValue"
               value={filterValue}
               onChange={handleFilterValueChange}
               options={filterOptions}
+              disabled={isLoading}
               sx={{
-                width: 180,
+                width: {
+                  xs: '100%',
+                  sm: 180,
+                },
                 '& .MuiInputBase-root': {
                   height: 44,
                 },
@@ -110,6 +139,7 @@ function SchedulePage() {
             type="button"
             variant="contained"
             onClick={handleCreateClass}
+            disabled={isLoading}
             startIcon={<AddIcon />}
             sx={{
               bgcolor: 'grey.900',
@@ -121,110 +151,158 @@ function SchedulePage() {
               fontWeight: 500,
               whiteSpace: 'nowrap',
               px: 2,
+              height: 44,
+              mt: {
+                xs: 1.5,
+                md: 0,
+              },
+              alignSelf: {
+                xs: 'flex-start',
+                md: 'auto',
+              },
             }}
           >
             Agregar clase
           </Button>
         </Box>
 
-        <TableContainer sx={{ px: 3, pb: 3 }}>
-          <Table
+        {isLoading ? (
+          <Box
             sx={{
-              minWidth: 1000,
-              border: '1px solid',
-              borderColor: 'divider',
-              tableLayout: 'fixed',
+              p: 8,
+              textAlign: 'center',
+              color: 'text.secondary',
+              fontWeight: 500,
             }}
           >
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  sx={{
-                    width: 130,
-                    fontWeight: 600,
-                    textAlign: 'center',
-                    bgcolor: 'grey.50',
-                  }}
-                >
-                  Franja
-                </TableCell>
+            Cargando horario...
+          </Box>
+        ) : (
+          <TableContainer
+            sx={{
+              px: 3,
+              pb: 3,
+              position: 'relative',
+            }}
+          >
+            {isScheduleLoading && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: 'rgba(255,255,255,0.7)',
+                }}
+              >
+                <span className="text-sm text-gray-500 font-medium">
+                  Actualizando horario...
+                </span>
+              </Box>
+            )}
 
-                {DAY_OPTIONS.map((day) => (
+            <Table
+              sx={{
+                minWidth: 1000,
+                border: '1px solid',
+                borderColor: 'divider',
+                tableLayout: 'fixed',
+              }}
+            >
+              <TableHead>
+                <TableRow>
                   <TableCell
-                    key={day.value}
-                    align="center"
                     sx={{
+                      width: 130,
                       fontWeight: 600,
+                      textAlign: 'center',
                       bgcolor: 'grey.50',
                     }}
                   >
-                    {day.label}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {timeSlotsData.map((timeSlot) => (
-                <TableRow key={timeSlot.id}>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontWeight: 500,
-                      color: 'text.secondary',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {timeSlot.start_time}–{timeSlot.end_time}
+                    Franja
                   </TableCell>
 
-                  {DAY_OPTIONS.map((day) => {
-                    const sessions = getSessions(
-                      day.value,
-                      timeSlot.id
-                    )
-
-                    return (
-                      <TableCell
-                        key={`${day.value}-${timeSlot.id}`}
-                        sx={{
-                          height: 90,
-                          verticalAlign: 'top',
-                          p: 1,
-                        }}
-                      >
-                        {sessions.map((session) => (
-                          <Box
-                            key={session.id}
-                            sx={{
-                              border: '1px solid',
-                              borderColor: 'divider',
-                              borderRadius: 2,
-                              bgcolor: 'grey.50',
-                              p: 1.25,
-                            }}
-                          >
-                            <p className="text-sm font-semibold text-slate-900">
-                              {session.subject.name}
-                            </p>
-
-                            <p className="text-xs text-slate-600 mt-1">
-                              {session.course.name} · {session.teacher.name}
-                            </p>
-
-                            <p className="text-xs text-slate-500">
-                              {session.classroom.name}
-                            </p>
-                          </Box>
-                        ))}
-                      </TableCell>
-                    )
-                  })}
+                  {DAY_OPTIONS.map((day) => (
+                    <TableCell
+                      key={day.value}
+                      align="center"
+                      sx={{
+                        fontWeight: 600,
+                        bgcolor: 'grey.50',
+                      }}
+                    >
+                      {day.label}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+
+              <TableBody>
+                {timeSlotsData.map((timeSlot) => (
+                  <TableRow key={timeSlot.id}>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        fontWeight: 500,
+                        color: 'text.secondary',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {timeSlot.start_time}–{timeSlot.end_time}
+                    </TableCell>
+
+                    {DAY_OPTIONS.map((day) => {
+                      const sessions = getSessions(
+                        day.value,
+                        timeSlot.id
+                      )
+
+                      return (
+                        <TableCell
+                          key={`${day.value}-${timeSlot.id}`}
+                          sx={{
+                            height: 90,
+                            verticalAlign: 'top',
+                            p: 1,
+                          }}
+                        >
+                          {sessions.map((session) => (
+                            <Box
+                              key={session.id}
+                              sx={{
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                borderRadius: 2,
+                                bgcolor: 'grey.50',
+                                p: 1.25,
+                              }}
+                            >
+                              <p className="text-sm font-semibold text-slate-900">
+                                {session.subject.name}
+                              </p>
+
+                              <p className="text-xs text-slate-600 mt-1">
+                                {session.course.name}
+                                {' · '}
+                                {session.teacher.name}
+                              </p>
+
+                              <p className="text-xs text-slate-500">
+                                {session.classroom.name}
+                              </p>
+                            </Box>
+                          ))}
+                        </TableCell>
+                      )
+                    })}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Paper>
     </>
   )
