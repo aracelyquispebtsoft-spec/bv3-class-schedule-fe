@@ -5,7 +5,7 @@ import {
 } from './service'
 
 
-export const getProgress = async () => {
+export const getAll = async () => {
   const response = await fetch(
     URL_PROGRESS,
     {

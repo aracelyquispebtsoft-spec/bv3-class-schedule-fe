@@ -3,34 +3,14 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
   Box,
-  Card,
-  CardContent,
   CircularProgress,
-  FormControl,
-  InputLabel,
-  LinearProgress,
-  MenuItem,
-  Select,
   Stack,
   Typography,
 } from '@mui/material'
 
-import { getProgress } from '../services/progress.service'
-
-const getProgressPercentage = (
-  assignedHours,
-  requiredHours
-) => {
-  if (requiredHours <= 0) {
-    return 100
-  }
-
-  return Math.min(
-    (assignedHours / requiredHours) * 100,
-    100
-  )
-}
-
+import FormSelect from '../components/shared/FormSelect'
+import ProgressCourseCard from '../components/progress/ProgressCourseCard'
+import { getAll } from '../services/progress.service'
 
 function ProgressPage() {
   const [progress, setProgress] = useState(null)
@@ -40,14 +20,13 @@ function ProgressPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-
   useEffect(() => {
     const loadProgress = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        const response = await getProgress()
+        const response = await getAll()
 
         setProgress(response)
       } catch (error) {
@@ -60,9 +39,20 @@ function ProgressPage() {
     loadProgress()
   }, [])
 
-
   const courses = progress?.courses ?? []
 
+  const courseOptions = useMemo(() => {
+    return [
+      {
+        value: 'all',
+        label: 'Todos los cursos',
+      },
+      ...courses.map(({ course }) => ({
+        value: String(course.id),
+        label: course.name,
+      })),
+    ]
+  }, [courses])
 
   const filteredCourses = useMemo(() => {
     if (selectedCourseId === 'all') {
@@ -77,7 +67,6 @@ function ProgressPage() {
     courses,
     selectedCourseId,
   ])
-
 
   const totalMissingHours = useMemo(() => {
     return courses.reduce(
@@ -99,7 +88,6 @@ function ProgressPage() {
     )
   }, [courses])
 
-
   if (loading) {
     return (
       <Box
@@ -114,7 +102,6 @@ function ProgressPage() {
     )
   }
 
-
   if (error) {
     return (
       <Alert severity="error">
@@ -122,7 +109,6 @@ function ProgressPage() {
       </Alert>
     )
   }
-
 
   return (
     <Box
@@ -150,53 +136,35 @@ function ProgressPage() {
         </Typography>
       </Box>
 
-
-      {progress?.complete ? (
-        <Alert severity="success">
-          ¡El horario está completo!
-        </Alert>
-      ) : (
-        <Alert severity="info">
-          Faltan {totalMissingHours} h en total.
-        </Alert>
+      {courses.length > 0 && (
+        progress?.complete ? (
+          <Alert severity="success">
+            ¡El horario está completo!
+          </Alert>
+        ) : (
+          <Alert severity="info">
+            Faltan {totalMissingHours} h en total.
+          </Alert>
+        )
       )}
 
-
-      <FormControl
-        fullWidth
+      <Box
         sx={{
           maxWidth: 320,
         }}
       >
-        <InputLabel id="course-filter-label">
-          Curso
-        </InputLabel>
-
-        <Select
-          labelId="course-filter-label"
-          id="course-filter"
-          value={selectedCourseId}
+        <FormSelect
           label="Curso"
+          name="course"
+          value={selectedCourseId}
           onChange={(event) =>
             setSelectedCourseId(
               event.target.value
             )
           }
-        >
-          <MenuItem value="all">
-            Todos los cursos
-          </MenuItem>
-
-          {courses.map(({ course }) => (
-            <MenuItem
-              key={course.id}
-              value={String(course.id)}
-            >
-              {course.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+          options={courseOptions}
+        />
+      </Box>
 
 
       {filteredCourses.length === 0 ? (
@@ -207,112 +175,13 @@ function ProgressPage() {
       ) : (
         <Stack spacing={3}>
           {filteredCourses.map(
-            ({
-              course,
-              complete,
-              subjects,
-            }) => (
-              <Card
-                key={course.id}
-                variant="outlined"
-              >
-                <CardContent>
-                  <Stack spacing={3}>
-                    <Box>
-                      <Typography
-                        variant="h6"
-                        component="h2"
-                      >
-                        {course.name}
-                      </Typography>
-
-                      {complete && (
-                        <Typography
-                          variant="body2"
-                          color="success.main"
-                          sx={{
-                            fontWeight: 600,
-                            mt: 0.5,
-                          }}
-                        >
-                          Curso completo
-                        </Typography>
-                      )}
-                    </Box>
-
-
-                    {subjects.map(
-                      ({
-                        subject,
-                        required_hours,
-                        assigned_hours,
-                        missing_hours,
-                      }) => {
-                        const percentage =
-                          getProgressPercentage(
-                            assigned_hours,
-                            required_hours
-                          )
-
-                        const isComplete =
-                          missing_hours === 0
-
-                        return (
-                          <Box
-                            key={subject.id}
-                            sx={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: 1,
-                            }}
-                          >
-                            <Typography
-                              variant="subtitle1"
-                              sx={{
-                                fontWeight: 600,
-                              }}
-                            >
-                              {subject.name}
-                            </Typography>
-
-
-                            {isComplete ? (
-                              <Typography
-                                variant="body2"
-                                color="success.main"
-                                sx={{
-                                  fontWeight: 600,
-                                }}
-                              >
-                                Completa
-                              </Typography>
-                            ) : (
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {assigned_hours} h de{' '}
-                                {required_hours} · faltan{' '}
-                                {missing_hours} h
-                              </Typography>
-                            )}
-
-
-                            <LinearProgress
-                              variant="determinate"
-                              value={percentage}
-                              sx={{
-                                height: 8,
-                                borderRadius: 4,
-                              }}
-                            />
-                          </Box>
-                        )
-                      }
-                    )}
-                  </Stack>
-                </CardContent>
-              </Card>
+            (courseItem) => (
+              <ProgressCourseCard
+                key={courseItem.course.id}
+                course={courseItem.course}
+                complete={courseItem.complete}
+                subjects={courseItem.subjects}
+              />
             )
           )}
         </Stack>
@@ -320,6 +189,5 @@ function ProgressPage() {
     </Box>
   )
 }
-
 
 export default ProgressPage
