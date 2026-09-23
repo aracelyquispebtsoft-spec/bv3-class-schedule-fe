@@ -3,60 +3,108 @@ import { courseService } from '../services/course.service'
 import { getAll as getTeachers } from '../services/teacher.service'
 import { classSessionsService } from '../services/class-session.service'
 
-export function useSessionFilters({
-    classSessionsData = [],
-    classroomsData = [],
-}) {
+export function useSessionFilters() {
     const [coursesData, setCourses] = useState([])
     const [teachersData, setTeachers] = useState([])
+    const [classroomsData, setClassrooms] = useState([])
     const [timeSlots, setTimeSlots] = useState([])
+    const [classSessions, setClassSessions] = useState([])
 
     const [filterType, setFilterType] = useState('course')
     const [filterValue, setFilterValue] = useState('')
-
     const [isLoading, setIsLoading] = useState(true)
-
     const [isScheduleLoading, setIsScheduleLoading] = useState(false)
+
+    const loadSchedule = async (type, value) => {
+        if (!value) {
+            setClassSessions([])
+            return
+        }
+
+        try {
+            setIsScheduleLoading(true)
+            let filters = {}
+            if (type === 'course') {
+                filters = {
+                course_id: value,
+                }
+            }
+
+            if (type === 'teacher') {
+                filters = {
+                teacher_id: value,
+                }
+            }
+
+            if (type === 'classroom') {
+                filters = {
+                classroom_id: value,
+                }
+            }
+
+            const response = await classSessionsService.getAll(filters)
+            const sessions = Array.isArray(response)
+                ? response
+                : response?.data ?? []
+
+            setClassSessions(sessions)
+        } catch (error) {
+            setClassSessions([])
+        } finally {
+            setIsScheduleLoading(false)
+        }
+    }
 
     useEffect(() => {
         const initialData = async () => {
-        try {
-            setIsLoading(true)
+            try {
+                setIsLoading(true)
 
-            const [
-            coursesRes,
-            teachersRes,
-            slotsRes,
-            slotsSessions
-            ] = await Promise.all([
-            courseService.getAll(),
-            getTeachers(),
-            classSessionsService.getTimeSlots(),
-            classSessionsService.getAll(),
-            ])
+                const [
+                    coursesRes,
+                    teachersRes,
+                    classroomsRes,
+                    slotsRes,
+                ] = await Promise.all([
+                    courseService.getAll(),
+                    getTeachers(),
+                    classSessionsService.getClassrooms(),
+                    classSessionsService.getTimeSlots(),
+                ])
 
-            const courses = Array.isArray(coursesRes)
-            ? coursesRes
-            : coursesRes?.data ?? []
+                const courses = Array.isArray(coursesRes)
+                    ? coursesRes
+                    : coursesRes?.data ?? []
 
-            const teachers = Array.isArray(teachersRes)
-            ? teachersRes
-            : teachersRes?.data ?? []
+                const teachers = Array.isArray(teachersRes)
+                    ? teachersRes
+                    : teachersRes?.data ?? []
 
-            const slots = Array.isArray(slotsRes)
-            ? slotsRes
-            : slotsRes?.data ?? []
+                const classrooms = Array.isArray(classroomsRes)
+                    ? classroomsRes
+                    : classroomsRes?.data ?? []
 
-            setCourses(courses)
-            setTeachers(teachers)
-            setTimeSlots(slots)
+                const slots = Array.isArray(slotsRes)
+                    ? slotsRes
+                    : slotsRes?.data ?? []
 
-            setFilterValue(courses[0]?.id ?? '')
-        } catch (error) {
+                setCourses(courses)
+                setTeachers(teachers)
+                setClassrooms(classrooms)
+                setTimeSlots(slots)
 
-        } finally {
-            setIsLoading(false)
-        }
+                const firstCourseId = courses[0]?.id ?? ''
+
+                setFilterType('course')
+                setFilterValue(firstCourseId)
+
+                await loadSchedule('course', firstCourseId)
+
+            } catch (error) {
+
+            } finally {
+                setIsLoading(false)
+            }
         }
 
         initialData()
@@ -88,66 +136,46 @@ export function useSessionFilters({
         classroomsData,
     ])
 
-    const filteredSessions = useMemo(() => {
-        return classSessionsData.filter((session) => {
-        if (filterType === 'course') {
-            return session.course?.id === filterValue
-        }
-
-        if (filterType === 'teacher') {
-            return session.teacher?.id === filterValue
-        }
-
-        return session.classroom?.id === filterValue
-        })
-    }, [
-        filterType,
-        filterValue,
-        classSessionsData,
-    ])
-
-    const handleFilterTypeChange = (event) => {
+    const handleFilterTypeChange = async (event) => {
         const value = event.target.value
 
-        setFilterType(value)
-
+        let firstValue = ''
         if (value === 'course') {
-        setFilterValue(coursesData[0]?.id ?? '')
+        firstValue = coursesData[0]?.id ?? ''
         }
 
         if (value === 'teacher') {
-        setFilterValue(teachersData[0]?.id ?? '')
+        firstValue = teachersData[0]?.id ?? ''
         }
 
         if (value === 'classroom') {
-        setFilterValue(classroomsData[0]?.id ?? '')
+        firstValue = classroomsData[0]?.id ?? ''
         }
+
+        setFilterType(value)
+        setFilterValue(firstValue)
+        await loadSchedule(value, firstValue)
     }
 
-    const handleFilterValueChange = (event) => {
-        setFilterValue(event.target.value)
+    const handleFilterValueChange = async (event) => {
+        const value = event.target.value
+        setFilterValue(value)
+        await loadSchedule(filterType, value)
     }
 
     const reloadSchedule = async () => {
-        try {
-            setIsScheduleLoading(true)
-
-            await new Promise((resolve) => setTimeout(resolve, 800))
-
-        } finally {
-            setIsScheduleLoading(false)
-        }
+        await loadSchedule(filterType, filterValue)
     }
 
     const handleCreateClass = async () => {
+        const firstCourseId = coursesData[0]?.id ?? ''
         setFilterType('course')
-        setFilterValue(coursesData[0]?.id ?? '')
-
-        await reloadSchedule()
+        setFilterValue(firstCourseId)
+        await loadSchedule('course', firstCourseId)
     }
 
     const getSessions = (day, timeSlotId) => {
-        return filteredSessions.filter(
+        return classSessions.filter(
         (session) =>
             session.day === day &&
             session.time_slot?.id === timeSlotId
@@ -170,6 +198,7 @@ export function useSessionFilters({
         handleFilterTypeChange,
         handleFilterValueChange,
         handleCreateClass,
+        reloadSchedule,
         getSessions,
         getSecondSelectLabel,
     }

@@ -15,11 +15,6 @@ import AddIcon from '@mui/icons-material/Add'
 import FormSelect from '../components/shared/FormSelect'
 
 import {
-  classSessionsData,
-  classroomsData,
-} from '../data/dummy.data'
-
-import {
   DAY_OPTIONS,
   filterTypes,
 } from '../utils/constants'
@@ -39,10 +34,11 @@ function SchedulePage() {
     handleCreateClass,
     getSessions,
     getSecondSelectLabel,
-  } = useSessionFilters({
-    classSessionsData,
-    classroomsData,
-  })
+  } = useSessionFilters()
+
+  const handleCreateClassClick = () => {
+    handleCreateClass()
+  }
 
   return (
     <>
@@ -100,7 +96,7 @@ function SchedulePage() {
               value={filterType}
               onChange={handleFilterTypeChange}
               options={filterTypes}
-              disabled={isLoading}
+              disabled={isLoading || isScheduleLoading}
               sx={{
                 width: {
                   xs: '100%',
@@ -122,7 +118,7 @@ function SchedulePage() {
               value={filterValue}
               onChange={handleFilterValueChange}
               options={filterOptions}
-              disabled={isLoading}
+              disabled={isLoading || isScheduleLoading}
               sx={{
                 width: {
                   xs: '100%',
@@ -138,8 +134,8 @@ function SchedulePage() {
           <Button
             type="button"
             variant="contained"
-            onClick={handleCreateClass}
-            disabled={isLoading}
+            onClick={handleCreateClassClick}
+            disabled={isLoading || isScheduleLoading}
             startIcon={<AddIcon />}
             sx={{
               bgcolor: 'grey.900',
@@ -194,11 +190,11 @@ function SchedulePage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  bgcolor: 'rgba(255,255,255,0.7)',
+                  bgcolor: 'rgba(255, 255, 255, 0.7)',
                 }}
               >
                 <span className="text-sm text-gray-500 font-medium">
-                  Actualizando horario...
+                  Cargando horario...
                 </span>
               </Box>
             )}
@@ -248,9 +244,11 @@ function SchedulePage() {
                         fontWeight: 500,
                         color: 'text.secondary',
                         whiteSpace: 'nowrap',
+                        bgcolor: 'grey.50',
                       }}
                     >
-                      {timeSlot.start_time}–{timeSlot.end_time}
+                      {timeSlot.start_time}–
+                      {timeSlot.end_time}
                     </TableCell>
 
                     {DAY_OPTIONS.map((day) => {
@@ -280,17 +278,17 @@ function SchedulePage() {
                               }}
                             >
                               <p className="text-sm font-semibold text-slate-900">
-                                {session.subject.name}
+                                {session.subject?.name}
                               </p>
 
                               <p className="text-xs text-slate-600 mt-1">
-                                {session.course.name}
+                                {session.course?.name}
                                 {' · '}
-                                {session.teacher.name}
+                                {session.teacher?.name}
                               </p>
 
                               <p className="text-xs text-slate-500">
-                                {session.classroom.name}
+                                {session.classroom?.name}
                               </p>
                             </Box>
                           ))}
