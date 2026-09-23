@@ -117,17 +117,17 @@ function ProfilePage() {
     try {
       setSchoolLoading(true)
 
-      const updatedSchool = await update(user.school.id, {
+      const updatedSchool = await update({
         name: schoolForm.name.trim(),
       })
 
-      setUser((currentUser) => ({
-        ...currentUser,
-        school: {
-          ...currentUser.school,
-          ...(updatedSchool || schoolForm),
-        },
-      }))
+     setUser((currentUser) => ({
+       ...currentUser,
+       school: {
+         ...currentUser.school,
+         ...(updatedSchool || schoolForm),
+       },
+     }))
 
       setIsSchoolModalOpen(false)
     } catch (err) {

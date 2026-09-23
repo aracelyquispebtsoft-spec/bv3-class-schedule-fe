@@ -10,8 +10,8 @@ export const create = async (schoolData) => {
   return handleResponse(response)
 }
 
-export const update = async (id, schoolData) => {
-  const response = await fetch(`${URL_SCHOOL}/${id}`, {
+export const update = async (schoolData) => {
+  const response = await fetch(URL_SCHOOL, {
     method: 'PUT',
     headers: HEADERS,
     body: JSON.stringify(schoolData),
