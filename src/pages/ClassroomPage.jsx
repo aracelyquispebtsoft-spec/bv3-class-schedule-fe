@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Button, TableCell, TableRow } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 
@@ -8,6 +8,7 @@ import ClassroomFormModal from '../components/shared/classroom/modals/ClassroomF
 import ClassroomDetailModal from '../components/shared/classroom/modals/ClassroomDetailModal'
 import ClassroomDeleteModal from '../components/shared/classroom/modals/ClassroomDeleteModal'
 import * as classroomService from '../services/classroom.service'
+import { usePaginatedList } from '../hooks/usePaginatedList'
 
 const TYPE_LABELS = {
   COMMON: 'Común',
@@ -28,10 +29,6 @@ const EMPTY_FORM = {
 }
 
 function ClassroomPage() {
-  const [classrooms, setClassrooms] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
@@ -43,45 +40,17 @@ function ClassroomPage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  const loadClassrooms = async () => {
-    try {
-      setLoading(true)
-      setError('')
-
-      const data = await classroomService.getAll()
-      setClassrooms(data || [])
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    let active = true
-
-    classroomService
-      .getAll()
-      .then((data) => {
-        if (active) {
-          setClassrooms(data || [])
-        }
-      })
-      .catch((err) => {
-        if (active) {
-          setError(err.message)
-        }
-      })
-      .finally(() => {
-        if (active) {
-          setLoading(false)
-        }
-      })
-
-    return () => {
-      active = false
-    }
-  }, [])
+  const {
+    items: classrooms,
+    loading,
+    error,
+    page,
+    rowsPerPage,
+    total,
+    onPageChange,
+    onRowsPerPageChange,
+    reload,
+  } = usePaginatedList(classroomService.getPage)
 
   const openCreate = () => {
     setSelectedClassroom(null)
@@ -187,7 +156,7 @@ function ClassroomPage() {
       setForm(EMPTY_FORM)
       setFormErrors({})
 
-      await loadClassrooms()
+      await reload()
     } catch (err) {
       setFormError(err.message)
     } finally {
@@ -207,7 +176,7 @@ function ClassroomPage() {
       setIsDeleteOpen(false)
       setSelectedClassroom(null)
 
-      await loadClassrooms()
+      await reload()
     } catch (err) {
       setFormError(err.message)
     } finally {
@@ -221,6 +190,11 @@ function ClassroomPage() {
         title="Aulas"
         columns={['Nombre', 'Capacidad', 'Tipo', 'Acciones']}
         loading={loading}
+        total={total}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={onPageChange}
+        onRowsPerPageChange={onRowsPerPageChange}
         emptyMessage="No hay aulas registradas"
         toolbar={
           <Button

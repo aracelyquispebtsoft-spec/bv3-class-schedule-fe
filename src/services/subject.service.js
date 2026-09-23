@@ -1,7 +1,7 @@
 import {
   HEADERS,
   URL_SUBJECTS,
-  handlePageResponse,
+  getPage as fetchPage,
   handleResponse,
 } from "./service";
 
@@ -50,10 +50,6 @@ export const remove = async (id) => {
   return handleResponse(response);
 };
 
-export const getPage = async (page, limit) => {
-  const response = await fetch(`${URL_SUBJECTS}?page=${page}&limit=${limit}`, {
-    headers: HEADERS,
-  });
-
-  return handlePageResponse(response);
-};
+export const getPage = (page, limit) => {
+  return fetchPage(URL_SUBJECTS, page, limit)
+}

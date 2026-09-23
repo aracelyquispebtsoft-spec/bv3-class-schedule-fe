@@ -1,23 +1,17 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Button, TableCell, TableRow } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import FormInput from "../components/shared/FormInput";
 import FormStandard from "../components/shared/FormStandard";
 import ModalStandard from "../components/shared/ModalStandard";
 import TableActions from "../components/shared/TableActions";
 import TableData from "../components/shared/TableData";
 import * as teacherService from "../services/teacher.service";
+import { usePaginatedList } from '../hooks/usePaginatedList'
 
 const emptyForm = { name: "", max_weekly_hours: "" };
 
 function TeacherPage() {
-  const [teachers, setTeachers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [total, setTotal] = useState(0);
-
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -30,41 +24,17 @@ function TeacherPage() {
   const [toDelete, setToDelete] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
   const [deleting, setDeleting] = useState(false);
-
-  const loadTeachers = (backendPage = page, backendLimit = rowsPerPage) => {
-    setLoading(true);
-    teacherService
-      .getPage(backendPage + 1, backendLimit)
-      .then(({ data, meta }) => {
-        setTeachers(data);
-        setTotal(meta.total);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-
-    teacherService
-      .getPage(page + 1, rowsPerPage)
-      .then(({ data, meta }) => {
-        if (!cancelled) {
-          setTeachers(data);
-          setTotal(meta.total);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [page, rowsPerPage]);
+  const {
+    items: teachers,
+    loading,
+    error,
+    page,
+    rowsPerPage,
+    total,
+    onPageChange,
+    onRowsPerPageChange,
+    reload,
+  } = usePaginatedList(teacherService.getPage)
 
   const openCreate = () => {
     setEditing(null);
@@ -131,7 +101,7 @@ function TeacherPage() {
         await teacherService.create(payload);
       }
       closeModal();
-      loadTeachers();
+      reload();
     } catch (err) {
       setFormError(err.message);
     } finally {
@@ -146,7 +116,7 @@ function TeacherPage() {
     try {
       await teacherService.remove(toDelete.id);
       setToDelete(null);
-      loadTeachers();
+      reload();
     } catch (err) {
       setDeleteError(err.message);
     } finally {
@@ -160,16 +130,13 @@ function TeacherPage() {
     <div className="flex flex-col gap-4">
       <TableData
         title="Docentes"
-        columns={["Nombre", "Tope semanal", "Acciones"]}
+        columns={['Nombre', 'Tope semanal', 'Acciones']}
         loading={loading}
         total={total}
         page={page}
         rowsPerPage={rowsPerPage}
-        onPageChange={setPage}
-        onRowsPerPageChange={(nextRowsPerPage) => {
-          setRowsPerPage(nextRowsPerPage);
-          setPage(0);
-        }}
+        onPageChange={onPageChange}
+        onRowsPerPageChange={onRowsPerPageChange}
         toolbar={
           <Button
             variant="contained"

@@ -1,4 +1,4 @@
-import { HEADERS, URL_CLASSROOMS, handleResponse } from './service'
+import { HEADERS, URL_CLASSROOMS, getPage as fetchPage, handleResponse,} from './service'
 
 export const getAll = async () => {
   const response = await fetch(URL_CLASSROOMS, {
@@ -43,4 +43,8 @@ export const remove = async (id) => {
   })
 
   return handleResponse(response)
+}
+
+export const getPage = (page, limit) => {
+  return fetchPage(URL_CLASSROOMS, page, limit)
 }

@@ -1,6 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Button, TableCell, TableRow } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import FormInput from "../components/shared/FormInput";
 import FormSelect from "../components/shared/FormSelect";
@@ -10,6 +10,7 @@ import TableActions from "../components/shared/TableActions";
 import TableData from "../components/shared/TableData";
 import * as subjectService from "../services/subject.service";
 import { CLASSROOM_TYPES } from "../utils/constants";
+import { usePaginatedList } from '../hooks/usePaginatedList'
 
 const emptyForm = {
   name: "",
@@ -29,13 +30,6 @@ const roomTypeOptions = CLASSROOM_TYPES.map((type) => ({
 }));
 
 function SubjectPage() {
-  const [subjects, setSubjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [total, setTotal] = useState(0);
-
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -48,46 +42,17 @@ function SubjectPage() {
   const [toDelete, setToDelete] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
   const [deleting, setDeleting] = useState(false);
-
-  const loadSubjects = (backendPage = page, backendLimit = rowsPerPage) => {
-    setLoading(true);
-
-    subjectService
-      .getPage(backendPage + 1, backendLimit)
-      .then(({ data, meta }) => {
-        setSubjects(data);
-        setTotal(meta.total);
-      })
-      .catch((requestError) => setError(requestError.message))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-
-    subjectService
-      .getPage(page + 1, rowsPerPage)
-      .then(({ data, meta }) => {
-        if (!cancelled) {
-          setSubjects(data);
-          setTotal(meta.total);
-        }
-      })
-      .catch((requestError) => {
-        if (!cancelled) {
-          setError(requestError.message);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [page, rowsPerPage]);
+  const {
+    items: subjects,
+    loading,
+    error,
+    page,
+    rowsPerPage,
+    total,
+    onPageChange,
+    onRowsPerPageChange,
+    reload,
+  } = usePaginatedList(subjectService.getPage)
 
   const openCreate = () => {
     setEditing(null);
@@ -180,7 +145,7 @@ function SubjectPage() {
       }
 
       closeModal();
-      loadSubjects();
+      reload();
     } catch (requestError) {
       setFormError(requestError.message);
     } finally {
@@ -195,7 +160,7 @@ function SubjectPage() {
     try {
       await subjectService.remove(toDelete.id);
       setToDelete(null);
-      loadSubjects();
+      reload();
     } catch (requestError) {
       setDeleteError(requestError.message);
     } finally {
@@ -216,16 +181,13 @@ function SubjectPage() {
 
       <TableData
         title="Materias"
-        columns={["Nombre", "Horas por semana", "Tipo de aula", "Acciones"]}
+        columns={['Nombre', 'Horas por semana', 'Tipo de aula', 'Acciones']}
         loading={loading}
         total={total}
         page={page}
         rowsPerPage={rowsPerPage}
-        onPageChange={setPage}
-        onRowsPerPageChange={(nextRowsPerPage) => {
-          setRowsPerPage(nextRowsPerPage);
-          setPage(0);
-        }}
+        onPageChange={onPageChange}
+        onRowsPerPageChange={onRowsPerPageChange}
         toolbar={
           <Button
             variant="contained"

@@ -55,3 +55,10 @@ export const handlePageResponse = async (response) => {
     meta: body?.meta || { page: 1, limit: 10, total: 0, total_pages: 0 },
   };
 };
+
+export const getPage = async (url, page, limit) => {
+  const response = await fetch(`${url}?page=${page}&limit=${limit}`, {
+    headers: HEADERS,
+  });
+  return handlePageResponse(response);
+};

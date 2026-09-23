@@ -1,16 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { courseService } from "../services/course.service";
 import { validateCourseForm } from "../utils/course.validations";
+import { usePaginatedList } from './usePaginatedList'
 
 const INITIAL_FORM_STATE = { name: "", student_count: "" };
 
 export function useCourses() {
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState("");
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [total, setTotal] = useState(0);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
@@ -27,26 +23,17 @@ export function useCourses() {
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    const loadCourses = async () => {
-      try {
-        setLoading(true);
-        const { data, meta } = await courseService.getPage(
-          page + 1,
-          rowsPerPage,
-        );
-        setCourses(data || []);
-        setTotal(meta.total);
-      } catch (error) {
-        setServerError(
-          error?.message || "Ocurrió un error al cargar los cursos.",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadCourses();
-  }, [page, rowsPerPage]);
+    const {
+      items: courses,
+      loading,
+      error: paginationError,
+      page,
+      rowsPerPage,
+      total,
+      onPageChange,
+      onRowsPerPageChange,
+      reload,
+    } = usePaginatedList(courseService.getPage)
 
   const handleOpenCreate = () => {
     setEditingCourse(null);
@@ -95,20 +82,14 @@ export function useCourses() {
       setSaving(true);
       setServerError("");
       if (editingCourse) {
-        const updated = await courseService.update(editingCourse.id, formData);
-        setCourses((prev) =>
-          prev.map((item) =>
-            item.id === editingCourse.id
-              ? updated || { ...item, ...formData }
-              : item,
-          ),
-        );
-        setSuccessMessage("Curso actualizado correctamente.");
+        await courseService.update(editingCourse.id, formData)
+        setSuccessMessage('Curso actualizado correctamente.')
       } else {
-        const created = await courseService.create(formData);
-        setCourses((prev) => [...prev, created]);
-        setSuccessMessage("Curso creado correctamente.");
+        await courseService.create(formData)
+        setSuccessMessage('Curso creado correctamente.')
       }
+
+      reload();
       handleCloseModal();
     } catch (error) {
       setServerError(error?.message || "Ocurrió un error al guardar el curso.");
@@ -141,10 +122,7 @@ export function useCourses() {
       setDeleting(true);
       setDeleteError("");
       await courseService.destroy(courseToDelete.id);
-
-      setCourses((prev) =>
-        prev.filter((item) => item.id !== courseToDelete.id),
-      );
+      reload();
       setSuccessMessage("Curso eliminado correctamente.");
       handleCloseDelete();
     } catch (error) {
@@ -161,14 +139,12 @@ export function useCourses() {
   return {
     courses,
     loading,
+    error: paginationError || serverError,
     page,
     rowsPerPage,
     total,
-    onPageChange: setPage,
-    onRowsPerPageChange: (nextRowsPerPage) => {
-      setRowsPerPage(nextRowsPerPage);
-      setPage(0);
-    },
+    onPageChange,
+    onRowsPerPageChange,
     successMessage,
     closeSuccess,
     formModal: {

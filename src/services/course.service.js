@@ -1,34 +1,25 @@
 import {
-  handlePageResponse,
-  handleResponse,
-  API_URL,
   HEADERS,
+  URL_COURSES,
+  getPage as fetchPage,
+  handleResponse,
 } from "./service";
-
-const URL_COURSE = "/courses";
 
 export const courseService = {
   getAll: async () => {
-    const response = await fetch(`${API_URL}${URL_COURSE}`, {
+    const response = await fetch(URL_COURSES, {
       method: "GET",
       headers: HEADERS,
     });
     return handleResponse(response);
   },
 
-  getPage: async (page, limit) => {
-    const response = await fetch(
-      `${API_URL}${URL_COURSE}?page=${page}&limit=${limit}`,
-      {
-        method: "GET",
-        headers: HEADERS,
-      },
-    );
-    return handlePageResponse(response);
+  getPage: (page, limit) => {
+    return fetchPage(URL_COURSES, page, limit)
   },
 
   getOne: async (id) => {
-    const response = await fetch(`${API_URL}${URL_COURSE}/${id}`, {
+    const response = await fetch(`${URL_COURSES}/${id}`, {
       method: "GET",
       headers: HEADERS,
     });
@@ -36,7 +27,7 @@ export const courseService = {
   },
 
   create: async (dataCourse) => {
-    const response = await fetch(`${API_URL}${URL_COURSE}`, {
+    const response = await fetch(URL_COURSES, {
       method: "POST",
       headers: HEADERS,
       body: JSON.stringify(dataCourse),
@@ -45,7 +36,7 @@ export const courseService = {
   },
 
   update: async (id, dataCourse) => {
-    const response = await fetch(`${API_URL}${URL_COURSE}/${id}`, {
+    const response = await fetch(`${URL_COURSES}/${id}`, {
       method: "PUT",
       headers: HEADERS,
       body: JSON.stringify(dataCourse),
@@ -54,7 +45,7 @@ export const courseService = {
   },
 
   destroy: async (id) => {
-    const response = await fetch(`${API_URL}${URL_COURSE}/${id}`, {
+    const response = await fetch(`${URL_COURSES}/${id}`, {
       method: "DELETE",
       headers: HEADERS,
     });
