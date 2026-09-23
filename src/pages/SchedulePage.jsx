@@ -64,6 +64,8 @@ function SchedulePage() {
         sx={{
           borderRadius: 3,
           overflow: 'hidden',
+          width: '100%',
+          minWidth: 0,
         }}
       >
         <Box
@@ -177,7 +179,7 @@ function SchedulePage() {
           </Alert>
         )}
 
-        {isLoading ? (
+        {isLoading || isScheduleLoading ? (
           <Box
             sx={{
               p: 8,
@@ -189,131 +191,94 @@ function SchedulePage() {
             Cargando horario...
           </Box>
         ) : (
-          <TableContainer
-            sx={{
-              px: 3,
-              pb: 3,
-              position: 'relative',
-            }}
-          >
-            {isScheduleLoading && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  inset: 0,
-                  zIndex: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  bgcolor: 'rgba(255, 255, 255, 0.7)',
-                }}
-              >
-                <span className="text-sm text-gray-500 font-medium">
-                  Cargando horario...
-                </span>
-              </Box>
-            )}
-
-            <Table
-              sx={{
-                minWidth: 880,
-                border: '1px solid',
-                borderColor: 'divider',
-                tableLayout: 'fixed',
-              }}
-            >
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    sx={{
-                      width: 120,
-                      fontWeight: 600,
-                      textAlign: 'center',
-                      bgcolor: 'grey.50',
-                    }}
-                  >
-                    Franja
-                  </TableCell>
-
-                  {DAY_OPTIONS.map((day) => (
-                    <TableCell
-                      key={day.value}
-                      align="center"
-                      sx={{
-                        fontWeight: 600,
-                        bgcolor: 'grey.50',
-                      }}
-                    >
-                      {day.label}
+          <TableContainer sx={{ px: 3, pb: 3 }}>
+            <Box sx={{ display: 'flex', border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>  
+              <Table sx={{ width: 120, flexShrink: 0 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ width: 120, fontWeight: 600, textAlign: 'center', bgcolor: 'grey.50', borderRight: '1px solid', borderColor: 'divider' }}>
+                      Franja
                     </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {timeSlotsData.map((timeSlot) => (
-                  <TableRow key={timeSlot.id}>
-                    <TableCell
-                      align="center"
-                      sx={{
-                        fontWeight: 500,
-                        color: 'text.secondary',
-                        whiteSpace: 'nowrap',
-                        bgcolor: 'grey.50',
-                      }}
-                    >
-                      {timeSlot.start_time}–
-                      {timeSlot.end_time}
-                    </TableCell>
-
-                    {DAY_OPTIONS.map((day) => {
-                      const sessions = getSessions(
-                        day.value,
-                        timeSlot.id
-                      )
-
-                      return (
-                        <TableCell
-                          key={`${day.value}-${timeSlot.id}`}
-                          sx={{
-                            height: 90,
-                            verticalAlign: 'top',
-                            p: 1,
-                          }}
-                        >
-                          {sessions.map((session) => (
-                            <Box
-                              key={session.id}
-                              sx={{
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                borderRadius: 2,
-                                bgcolor: 'grey.50',
-                                p: 1.25,
-                              }}
-                            >
-                              <p className="text-sm font-semibold text-slate-900">
-                                {session.subject?.name}
-                              </p>
-
-                              <p className="text-xs text-slate-600 mt-1">
-                                {session.course?.name}
-                                {' · '}
-                                {session.teacher?.name}
-                              </p>
-
-                              <p className="text-xs text-slate-500">
-                                {session.classroom?.name}
-                              </p>
-                            </Box>
-                          ))}
-                        </TableCell>
-                      )
-                    })}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {timeSlotsData.map((timeSlot) => (
+                    <TableRow key={timeSlot.id}>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          height: 90,
+                          fontWeight: 500,
+                          color: 'text.secondary',
+                          whiteSpace: 'nowrap',
+                          bgcolor: 'grey.50',
+                          borderRight: '1px solid',
+                          borderColor: 'divider',
+                        }}
+                      >
+                        {timeSlot.start_time}–{timeSlot.end_time}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              <Box sx={{ overflowX: 'auto', flex: 1 }}>
+                <Table sx={{ minWidth: 760, tableLayout: 'fixed' }}>
+                  <TableHead>
+                    <TableRow>
+                      {DAY_OPTIONS.map((day) => (
+                        <TableCell key={day.value} align="center" sx={{ fontWeight: 600, bgcolor: 'grey.50' }}>
+                          {day.label}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {timeSlotsData.map((timeSlot) => (
+                      <TableRow key={timeSlot.id}>
+                        {DAY_OPTIONS.map((day) => {
+                          const sessions = getSessions(day.value, timeSlot.id)
+                          return (
+                            <TableCell
+                              key={`${day.value}-${timeSlot.id}`}
+                              sx={{ height: 90, verticalAlign: 'top', p: 1, overflow: 'hidden' }}
+                            >
+                              {sessions.map((session) => (
+                                <Box
+                                  key={session.id}
+                                  sx={{
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    borderRadius: 2,
+                                    bgcolor: 'grey.50',
+                                    p: 1.25,
+                                    maxWidth: '100%',
+                                    boxSizing: 'border-box',
+                                    overflow: 'hidden',
+                                  }}
+                                >
+                                  <p className="text-sm font-semibold text-slate-900 truncate">
+                                    {session.subject?.name}
+                                  </p>
+                                  <p className="text-xs text-slate-600 mt-1 truncate">
+                                    {session.course?.name} · {session.teacher?.name}
+                                  </p>
+                                  <p className="text-xs text-slate-500 truncate">
+                                    {session.classroom?.name}
+                                  </p>
+                                </Box>
+                              ))}
+                            </TableCell>
+                          )
+                        })}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+
+            </Box>
           </TableContainer>
         )}
       </Paper>

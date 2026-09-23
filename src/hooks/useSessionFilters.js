@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { courseService } from '../services/course.service'
 import { getAll as getTeachers } from '../services/teacher.service'
 import { classSessionsService } from '../services/class-session.service'
+import { getAll as getClassrooms } from '../services/classroom.service'
 
 export function useSessionFilters() {
     const [coursesData, setCourses] = useState([])
@@ -72,7 +73,7 @@ export function useSessionFilters() {
                 ] = await Promise.all([
                     courseService.getAll(),
                     getTeachers(),
-                    classSessionsService.getClassrooms(),
+                    getClassrooms(),
                     classSessionsService.getTimeSlots(),
                 ])
 

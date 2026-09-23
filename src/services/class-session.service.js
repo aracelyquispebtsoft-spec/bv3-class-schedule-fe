@@ -1,4 +1,4 @@
-import { handleResponse, HEADERS, URL_TIME_SLOTS, URL_CLASS_SESSION, API_URL } from "./service";
+import { handleResponse, HEADERS, URL_TIME_SLOTS, URL_CLASS_SESSION } from "./service";
 
 export const classSessionsService = {
     getTimeSlots: async () => {
@@ -17,11 +17,4 @@ export const classSessionsService = {
         })
         return handleResponse(response)
     },
-    getClassrooms: async () => {
-        const response = await fetch(`${API_URL}/classrooms`, {
-            method: "GET",
-            headers: HEADERS
-        })
-        return handleResponse(response)
-    }
 }
