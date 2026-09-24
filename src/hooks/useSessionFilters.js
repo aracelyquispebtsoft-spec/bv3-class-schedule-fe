@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { courseService } from '../services/course.service'
 import { getAll as getTeachers } from '../services/teacher.service'
-import { classSessionsService } from '../services/class-session.service'
+import { getAll, getTimeSlots } from '../services/class-session.service'
 import { getAll as getClassrooms } from '../services/classroom.service'
 
 export function useSessionFilters() {
@@ -46,12 +46,8 @@ export function useSessionFilters() {
                 }
             }
 
-            const response = await classSessionsService.getAll(filters)
-            const sessions = Array.isArray(response)
-                ? response
-                : response?.data ?? []
-
-            setClassSessions(sessions)
+            const response = await getAll(filters)
+            setClassSessions(response)
         } catch (error) {
             setClassSessions([])
             setScheduleError(error.message || 'No se pudo cargar el horario. Intenta nuevamente.')
@@ -65,44 +61,43 @@ export function useSessionFilters() {
             try {
                 setIsLoading(true)
                 setError('')
-                const [
-                    coursesRes,
-                    teachersRes,
-                    classroomsRes,
-                    slotsRes,
-                ] = await Promise.all([
+
+                const [coursesRes, teachersRes, classroomsRes, slotsRes] = await Promise.allSettled([
                     courseService.getAll(),
                     getTeachers(),
                     getClassrooms(),
-                    classSessionsService.getTimeSlots(),
+                    getTimeSlots(),
                 ])
 
-                const courses = Array.isArray(coursesRes)
-                    ? coursesRes
-                    : coursesRes?.data ?? []
+                const failed = []
 
-                const teachers = Array.isArray(teachersRes)
-                    ? teachersRes
-                    : teachersRes?.data ?? []
+                const extract = (result, label) => {
+                    if (result.status === 'fulfilled') {
+                        const value = result.value
+                        return Array.isArray(value) ? value : value?.data ?? []
+                    }
+                    failed.push(label)
+                    return []
+                }
 
-                const classrooms = Array.isArray(classroomsRes)
-                    ? classroomsRes
-                    : classroomsRes?.data ?? []
-
-                const slots = Array.isArray(slotsRes)
-                    ? slotsRes
-                    : slotsRes?.data ?? []
+                const courses = extract(coursesRes, 'cursos')
+                const teachers = extract(teachersRes, 'docentes')
+                const classrooms = extract(classroomsRes, 'aulas')
+                const slots = extract(slotsRes, 'franjas horarias')
 
                 setCourses(courses)
                 setTeachers(teachers)
                 setClassrooms(classrooms)
                 setTimeSlots(slots)
 
-                const firstCourseId = courses[0]?.id ?? ''
+                if (failed.length > 0) {
+                    setError(`No se pudo cargar: ${failed.join(', ')}. Intenta nuevamente.`)
+                    return
+                }
 
+                const firstCourseId = courses[0]?.id ?? ''
                 setFilterType('course')
                 setFilterValue(firstCourseId)
-
                 await loadSchedule('course', firstCourseId)
 
             } catch (error) {
@@ -168,15 +163,13 @@ export function useSessionFilters() {
         await loadSchedule(filterType, value)
     }
 
-    const reloadSchedule = async () => {
-        await loadSchedule(filterType, filterValue)
+    // TODO: implementar la funcionalidad de crear una clase (CLS-23)
+    const handleCreateClass = () => {
+        // Por ahora no hace nada; la creación de clases se implementa en CLS-23
     }
 
-    const handleCreateClass = async () => {
-        const firstCourseId = coursesData[0]?.id ?? ''
-        setFilterType('course')
-        setFilterValue(firstCourseId)
-        await loadSchedule('course', firstCourseId)
+    const reloadSchedule = async () => {
+        await loadSchedule(filterType, filterValue)
     }
 
     const getSessions = (day, timeSlotId) => {
