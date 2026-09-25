@@ -17,3 +17,29 @@ export const getAll = async (filters = {}) => {
     })
     return handleResponse(response)
 }
+
+export const create = async (classSession) => {
+    const response = await fetch(URL_CLASS_SESSION, {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify(classSession)
+    })
+    return handleResponse(response)
+}
+
+export const update = async (id, classSession) => {
+    const response = await fetch(`${URL_CLASS_SESSION}/${id}`, {
+        method: "PUT",
+        headers: HEADERS,
+        body: JSON.stringify(classSession)
+    })
+    return handleResponse(response)
+}
+
+export const remove = async (id) => {
+    const response = await fetch(`${URL_CLASS_SESSION}/${id}`, {
+        method: "DELETE",
+        headers: HEADERS
+    })
+    return handleResponse(response)
+}

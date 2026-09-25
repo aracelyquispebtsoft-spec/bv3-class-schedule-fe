@@ -1,15 +1,33 @@
 import { useState, useMemo, useEffect } from 'react'
 import { courseService } from '../services/course.service'
 import { getAll as getTeachers } from '../services/teacher.service'
-import { getAll, getTimeSlots } from '../services/class-session.service'
+import { getAll, getTimeSlots, create, update, remove } from '../services/class-session.service'
 import { getAll as getClassrooms } from '../services/classroom.service'
+import { getAll as getSubjects } from '../services/subject.service'
 
 export function useSessionFilters() {
     const [coursesData, setCourses] = useState([])
     const [teachersData, setTeachers] = useState([])
     const [classroomsData, setClassrooms] = useState([])
+    const [subjectsData, setSubjects] = useState([])
     const [timeSlots, setTimeSlots] = useState([])
     const [classSessions, setClassSessions] = useState([])
+
+    const emptyForm = {
+        subject_id: '',
+        teacher_id: '',
+        classroom_id: '',
+        course_id: '',
+        day: '',
+        time_slot_id: '',
+    }
+
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+    const [editingSession, setEditingSession] = useState(null)
+    const [formData, setFormData] = useState(emptyForm)
+    const [formError, setFormError] = useState('')
+    const [saving, setSaving] = useState(false)
 
     const [filterType, setFilterType] = useState('course')
     const [filterValue, setFilterValue] = useState('')
@@ -62,10 +80,11 @@ export function useSessionFilters() {
                 setIsLoading(true)
                 setError('')
 
-                const [coursesRes, teachersRes, classroomsRes, slotsRes] = await Promise.allSettled([
+                const [coursesRes, teachersRes, classroomsRes, subjectsRes, slotsRes] = await Promise.allSettled([
                     courseService.getAll(),
                     getTeachers(),
                     getClassrooms(),
+                    getSubjects(),
                     getTimeSlots(),
                 ])
 
@@ -83,11 +102,13 @@ export function useSessionFilters() {
                 const courses = extract(coursesRes, 'cursos')
                 const teachers = extract(teachersRes, 'docentes')
                 const classrooms = extract(classroomsRes, 'aulas')
+                const subjects = extract(subjectsRes, 'materias')
                 const slots = extract(slotsRes, 'franjas horarias')
 
                 setCourses(courses)
                 setTeachers(teachers)
                 setClassrooms(classrooms)
+                setSubjects(subjects)
                 setTimeSlots(slots)
 
                 if (failed.length > 0) {
@@ -163,13 +184,90 @@ export function useSessionFilters() {
         await loadSchedule(filterType, value)
     }
 
-    // TODO: implementar la funcionalidad de crear una clase (CLS-23)
-    const handleCreateClass = () => {
-        // Por ahora no hace nada; la creación de clases se implementa en CLS-23
-    }
-
     const reloadSchedule = async () => {
         await loadSchedule(filterType, filterValue)
+    }
+
+    const handleCreateClass = (prefill = {}) => {
+        setEditingSession(null)
+        setFormError('')
+        setFormData({ ...emptyForm, ...prefill })
+        setIsModalOpen(true)
+    }
+
+    const handleEditClass = (session) => {
+        setEditingSession(session)
+        setFormError('')
+        setFormData({
+            subject_id: session.subject?.id ?? '',
+            teacher_id: session.teacher?.id ?? '',
+            classroom_id: session.classroom?.id ?? '',
+            course_id: session.course?.id ?? '',
+            day: session.day ?? '',
+            time_slot_id: session.time_slot?.id ?? '',
+        })
+        setIsModalOpen(true)
+    }
+
+    const handleFormChange = (event) => {
+        const { name, value } = event.target
+        setFormData((prev) => ({ ...prev, [name]: value }))
+    }
+
+    const closeModal = () => {
+        if (saving) return
+        setIsModalOpen(false)
+        setEditingSession(null)
+        setFormError('')
+    }
+
+    const handleSubmitClass = async (event) => {
+        event.preventDefault()
+        try {
+            setSaving(true)
+            setFormError('')
+
+            if (editingSession) {
+                await update(editingSession.id, formData)
+            } else {
+                await create(formData)
+            }
+
+            setIsModalOpen(false)
+            setEditingSession(null)
+            await reloadSchedule()
+        } catch (error) {
+            setFormError(error.message || 'No se pudo guardar la clase.')
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    const openDeleteModal = () => {
+        setIsDeleteModalOpen(true)
+    }
+
+    const closeDeleteModal = () => {
+        if (saving) return
+        setIsDeleteModalOpen(false)
+    }
+
+    const handleDeleteClass = async () => {
+        if (!editingSession) return
+        try {
+            setSaving(true)
+            setFormError('')
+            await remove(editingSession.id)
+            setIsDeleteModalOpen(false)
+            setIsModalOpen(false)
+            setEditingSession(null)
+            await reloadSchedule()
+        } catch (error) {
+            setFormError(error.message || 'No se pudo eliminar la clase.')
+            setIsDeleteModalOpen(false)
+        } finally {
+            setSaving(false)
+        }
     }
 
     const getSessions = (day, timeSlotId) => {
@@ -186,6 +284,27 @@ export function useSessionFilters() {
         return 'Aula'
     }
 
+    const subjectOptions = useMemo(
+        () => subjectsData.map((s) => ({ value: s.id, label: s.name })),
+        [subjectsData]
+    )
+    const teacherOptions = useMemo(
+        () => teachersData.map((t) => ({ value: t.id, label: t.name })),
+        [teachersData]
+    )
+    const classroomOptions = useMemo(
+        () => classroomsData.map((c) => ({ value: c.id, label: c.name })),
+        [classroomsData]
+    )
+    const courseOptions = useMemo(
+        () => coursesData.map((c) => ({ value: c.id, label: c.name })),
+        [coursesData]
+    )
+    const timeSlotOptions = useMemo(
+        () => timeSlots.map((t) => ({ value: t.id, label: `${t.start_time}–${t.end_time}` })),
+        [timeSlots]
+    )
+
     return {
         filterType,
         filterValue,
@@ -198,8 +317,26 @@ export function useSessionFilters() {
         handleFilterTypeChange,
         handleFilterValueChange,
         handleCreateClass,
+        handleEditClass,
         reloadSchedule,
         getSessions,
         getSecondSelectLabel,
+        isModalOpen,
+        isDeleteModalOpen,
+        editingSession,
+        formData,
+        formError,
+        saving,
+        handleFormChange,
+        handleSubmitClass,
+        closeModal,
+        openDeleteModal,
+        closeDeleteModal,
+        handleDeleteClass,
+        subjectOptions,
+        teacherOptions,
+        classroomOptions,
+        courseOptions,
+        timeSlotOptions,
     }
 }
