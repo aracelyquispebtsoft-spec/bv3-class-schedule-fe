@@ -139,7 +139,7 @@ export function useCourses() {
   return {
     courses,
     loading,
-    error: paginationError || serverError,
+    error: paginationError,
     page,
     rowsPerPage,
     total,

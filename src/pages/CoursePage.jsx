@@ -13,6 +13,7 @@ function CoursePage() {
   const {
     courses,
     loading,
+    error,
     page,
     rowsPerPage,
     total,
@@ -28,6 +29,10 @@ function CoursePage() {
     successMessage,
     closeSuccess,
   } = useCourses();
+
+  if (error) {
+    return <p className="text-red-700">Error: {error}</p>;
+  }
 
   return (
     <>
