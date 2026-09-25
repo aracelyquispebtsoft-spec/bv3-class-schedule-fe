@@ -14,6 +14,9 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 
 import FormSelect from '../components/shared/FormSelect'
+import ModalStandard from '../components/shared/ModalStandard'
+import ClassSessionForm from '../components/ClassSessionForm'
+import ClassSessionDeleteModal from '../components/ClassSessionDeleteModal'
 
 import {
   DAY_OPTIONS,
@@ -35,8 +38,27 @@ function SchedulePage() {
     handleFilterTypeChange,
     handleFilterValueChange,
     handleCreateClass,
+    handleEditClass,
     getSessions,
     getSecondSelectLabel,
+
+    isModalOpen,
+    isDeleteModalOpen,
+    editingSession,
+    formData,
+    formError,
+    saving,
+    handleFormChange,
+    handleSubmitClass,
+    closeModal,
+    openDeleteModal,
+    closeDeleteModal,
+    handleDeleteClass,
+    subjectOptions,
+    teacherOptions,
+    classroomOptions,
+    courseOptions,
+    timeSlotOptions,
   } = useSessionFilters()
 
   return (
@@ -141,7 +163,7 @@ function SchedulePage() {
             <Button
               type="button"
               variant="contained"
-              onClick={handleCreateClass}
+              onClick={() => handleCreateClass()}
               disabled={isLoading || isScheduleLoading}
               startIcon={<AddIcon />}
               sx={{
@@ -238,11 +260,27 @@ function SchedulePage() {
                             return (
                               <TableCell
                                 key={`${day.value}-${timeSlot.id}`}
-                                sx={{ height: 90, verticalAlign: 'top', p: 1, overflow: 'hidden' }}
+                                onClick={() => {
+                                  if (sessions.length === 0) {
+                                    handleCreateClass({ day: day.value, time_slot_id: timeSlot.id })
+                                  }
+                                }}
+                                sx={{
+                                  height: 90,
+                                  verticalAlign: 'top',
+                                  p: 1,
+                                  overflow: 'hidden',
+                                  cursor: sessions.length === 0 ? 'pointer' : 'default',
+                                  '&:hover': sessions.length === 0 ? { bgcolor: 'grey.50' } : undefined,
+                                }}
                               >
                                 {sessions.map((session) => (
                                   <Box
                                     key={session.id}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleEditClass(session)
+                                    }}
                                     sx={{
                                       border: '1px solid',
                                       borderColor: 'divider',
@@ -252,6 +290,8 @@ function SchedulePage() {
                                       maxWidth: '100%',
                                       boxSizing: 'border-box',
                                       overflow: 'hidden',
+                                      cursor: 'pointer',
+                                      '&:hover': { borderColor: 'grey.400' },
                                     }}
                                   >
                                     <p className="text-sm font-semibold text-slate-900 truncate">
@@ -278,7 +318,38 @@ function SchedulePage() {
             </TableContainer>
           )}
         </Paper>
-      )}  
+      )}
+
+      <ModalStandard
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={editingSession ? 'Editar clase' : 'Agregar clase'}
+      >
+        <ClassSessionForm
+          formData={formData}
+          onChange={handleFormChange}
+          onSubmit={handleSubmitClass}
+          onCancel={closeModal}
+          onDelete={openDeleteModal}
+          isEditing={Boolean(editingSession)}
+          subjectOptions={subjectOptions}
+          teacherOptions={teacherOptions}
+          classroomOptions={classroomOptions}
+          courseOptions={courseOptions}
+          timeSlotOptions={timeSlotOptions}
+          error={formError}
+          saving={saving}
+        />
+      </ModalStandard>
+
+      <ClassSessionDeleteModal
+        isOpen={isDeleteModalOpen}
+        session={editingSession}
+        onClose={closeDeleteModal}
+        onConfirm={handleDeleteClass}
+        error={formError}
+        loading={saving}
+      />
     </>
   )
 }
