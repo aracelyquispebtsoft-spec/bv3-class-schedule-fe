@@ -4,6 +4,7 @@ import Layout from './components/Layout'
 
 import PrivateRoute from './routes/PrivateRoute'
 import PublicRoute from './routes/PublicRoute'
+import SchoolRoute from './routes/SchoolRoute'
 
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
@@ -49,12 +50,13 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/school/new" element={<CreateSchoolPage />} />
-          <Route path="/teachers" element={<TeacherPage />} />
-          <Route path="/classrooms" element={<ClassroomPage />} />
-          <Route path="/courses" element={<CoursePage />} />
-          <Route path="/subjects" element={<SubjectPage />} />
-          <Route path="/schedule" element={<SchedulePage />} />
-          <Route path="/progress" element={<ProgressPage />} />
+
+          <Route path="/teachers" element={<SchoolRoute><TeacherPage /></SchoolRoute>} />
+          <Route path="/classrooms" element={<SchoolRoute><ClassroomPage /></SchoolRoute>} />
+          <Route path="/courses" element={<SchoolRoute><CoursePage /></SchoolRoute>} />
+          <Route path="/subjects" element={<SchoolRoute><SubjectPage /></SchoolRoute>} />
+          <Route path="/schedule" element={<SchoolRoute><SchedulePage /></SchoolRoute>} />
+          <Route path="/progress" element={<SchoolRoute><ProgressPage /></SchoolRoute>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
